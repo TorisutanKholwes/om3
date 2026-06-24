@@ -2660,7 +2660,7 @@ func newCmdObjectInstanceSyncRestore(kind string) *cobra.Command {
 	flags := cmd.Flags()
 	addFlagsGlobal(flags, &options.OptsGlobal)
 	commoncmd.FlagsLock(flags, &options.OptsLock)
-	commoncmd.FlagsResourceSelector(flags, &options.OptsResourceSelector)
+	commoncmd.FlagsResourceSelector(cmd, &options.OptsResourceSelector)
 	commoncmd.FlagForce(flags, &options.Force)
 	return cmd
 }
