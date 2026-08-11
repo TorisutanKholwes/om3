@@ -2989,6 +2989,16 @@ type PostInstanceActionStopParams struct {
 	To     *InQueryTo     `form:"to,omitempty" json:"to,omitempty"`
 }
 
+// PostInstanceActionSyncFullParams defines parameters for PostInstanceActionSyncFull.
+type PostInstanceActionSyncFullParams struct {
+	SessionId *InQuerySessionID `form:"session_id,omitempty" json:"session_id,omitempty"`
+
+	// Rid a resource selector expression
+	Rid    *InQueryRid    `form:"rid,omitempty" json:"rid,omitempty"`
+	Subset *InQuerySubset `form:"subset,omitempty" json:"subset,omitempty"`
+	Tag    *InQueryTag    `form:"tag,omitempty" json:"tag,omitempty"`
+}
+
 // PostInstanceActionSyncIngestParams defines parameters for PostInstanceActionSyncIngest.
 type PostInstanceActionSyncIngestParams struct {
 	SessionId *InQuerySessionID `form:"session_id,omitempty" json:"session_id,omitempty"`
@@ -3013,6 +3023,36 @@ type PostInstanceActionSyncRestoreParams struct {
 
 	// Src the source resource expression
 	Src *string `form:"src,omitempty" json:"src,omitempty"`
+}
+
+// PostInstanceActionSyncResyncParams defines parameters for PostInstanceActionSyncResync.
+type PostInstanceActionSyncResyncParams struct {
+	SessionId *InQuerySessionID `form:"session_id,omitempty" json:"session_id,omitempty"`
+
+	// Rid a resource selector expression
+	Rid    *InQueryRid    `form:"rid,omitempty" json:"rid,omitempty"`
+	Subset *InQuerySubset `form:"subset,omitempty" json:"subset,omitempty"`
+	Tag    *InQueryTag    `form:"tag,omitempty" json:"tag,omitempty"`
+}
+
+// PostInstanceActionSyncSplitParams defines parameters for PostInstanceActionSyncSplit.
+type PostInstanceActionSyncSplitParams struct {
+	SessionId *InQuerySessionID `form:"session_id,omitempty" json:"session_id,omitempty"`
+
+	// Rid a resource selector expression
+	Rid    *InQueryRid    `form:"rid,omitempty" json:"rid,omitempty"`
+	Subset *InQuerySubset `form:"subset,omitempty" json:"subset,omitempty"`
+	Tag    *InQueryTag    `form:"tag,omitempty" json:"tag,omitempty"`
+}
+
+// PostInstanceActionSyncUpdateParams defines parameters for PostInstanceActionSyncUpdate.
+type PostInstanceActionSyncUpdateParams struct {
+	SessionId *InQuerySessionID `form:"session_id,omitempty" json:"session_id,omitempty"`
+
+	// Rid a resource selector expression
+	Rid    *InQueryRid    `form:"rid,omitempty" json:"rid,omitempty"`
+	Subset *InQuerySubset `form:"subset,omitempty" json:"subset,omitempty"`
+	Tag    *InQueryTag    `form:"tag,omitempty" json:"tag,omitempty"`
 }
 
 // PostInstanceActionUnfreezeParams defines parameters for PostInstanceActionUnfreeze.
