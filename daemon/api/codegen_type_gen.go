@@ -2999,6 +2999,22 @@ type PostInstanceActionSyncIngestParams struct {
 	Tag    *InQueryTag    `form:"tag,omitempty" json:"tag,omitempty"`
 }
 
+// PostInstanceActionSyncRestoreParams defines parameters for PostInstanceActionSyncRestore.
+type PostInstanceActionSyncRestoreParams struct {
+	SessionId *InQuerySessionID `form:"session_id,omitempty" json:"session_id,omitempty"`
+
+	// Rid a resource selector expression
+	Rid    *InQueryRid    `form:"rid,omitempty" json:"rid,omitempty"`
+	Subset *InQuerySubset `form:"subset,omitempty" json:"subset,omitempty"`
+	Tag    *InQueryTag    `form:"tag,omitempty" json:"tag,omitempty"`
+
+	// To the destination directory
+	To *string `form:"to,omitempty" json:"to,omitempty"`
+
+	// Src the source resource expression
+	Src *string `form:"src,omitempty" json:"src,omitempty"`
+}
+
 // PostInstanceActionUnfreezeParams defines parameters for PostInstanceActionUnfreeze.
 type PostInstanceActionUnfreezeParams struct {
 	Slaves    *InQueryAllSlaves `form:"slaves,omitempty" json:"slaves,omitempty"`
