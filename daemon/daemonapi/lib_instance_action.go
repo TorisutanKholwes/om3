@@ -7,11 +7,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/opensvc/om3/v3/daemon/proc"
-
 	"github.com/opensvc/om3/v3/core/env"
 	"github.com/opensvc/om3/v3/core/naming"
 	"github.com/opensvc/om3/v3/daemon/msgbus"
+	"github.com/opensvc/om3/v3/daemon/proc"
 	"github.com/opensvc/om3/v3/util/command"
 	"github.com/opensvc/om3/v3/util/plog"
 	"github.com/opensvc/om3/v3/util/pubsub"
@@ -19,9 +18,14 @@ import (
 )
 
 func (a *DaemonAPI) apiExec(ctx echo.Context, p naming.Path, requesterSid uuid.UUID, args []string, log *plog.Logger) (uuid.UUID, error) {
+	sid, _, err := a.apiExecWait(ctx, p, requesterSid, args, log)
+	return sid, err
+}
+
+func (a *DaemonAPI) apiExecWait(ctx echo.Context, p naming.Path, requesterSid uuid.UUID, args []string, log *plog.Logger) (uuid.UUID, <-chan error, error) {
 	execname, err := os.Executable()
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("can't detect om execname: %w", err)
+		return uuid.Nil, nil, fmt.Errorf("can't detect om execname: %w", err)
 	}
 	sid := xsession.NewSid(requesterSid)
 	eid := xsession.NewEid()
@@ -52,7 +56,7 @@ func (a *DaemonAPI) apiExec(ctx echo.Context, p naming.Path, requesterSid uuid.U
 	startTime := time.Now()
 	if err = cmd.Start(); err != nil {
 		log.Errorf("exec StartProcess: %s", err)
-		return sid.UUID(), fmt.Errorf("instance action failed: %w", err)
+		return sid.UUID(), nil, fmt.Errorf("instance action failed: %w", err)
 	}
 	pid := cmd.Cmd().Process.Pid
 	proc.Register(proc.T{
@@ -65,6 +69,7 @@ func (a *DaemonAPI) apiExec(ctx echo.Context, p naming.Path, requesterSid uuid.U
 		Sub:       "api",
 		Cmd:       cmd.String(),
 	})
+	done := make(chan error, 1)
 	go func() {
 		err := cmd.Wait()
 		proc.Unregister(pid)
@@ -92,6 +97,9 @@ func (a *DaemonAPI) apiExec(ctx echo.Context, p naming.Path, requesterSid uuid.U
 			}
 			a.Bus.Pub(&msg, labels...)
 		}
+
+		done <- err
+		close(done)
 	}()
-	return sid.UUID(), nil
+	return sid.UUID(), done, nil
 }
