@@ -2613,7 +2613,7 @@ func newCmdObjectRestart(kind string) *cobra.Command {
 func newCmdObjectInstanceSyncIngest(kind string) *cobra.Command {
 	var options commands.CmdObjectInstanceSyncIngest
 	cmd := &cobra.Command{
-		Use:   "Ingest",
+		Use:   "ingest",
 		Short: "ingest files received from the active instance",
 		Long:  "Resource drivers can send files from the active instance to the stand-by instances via the update action.",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -2625,6 +2625,7 @@ func newCmdObjectInstanceSyncIngest(kind string) *cobra.Command {
 	commoncmd.FlagsAsync(flags, &options.OptsAsync)
 	commoncmd.FlagsLock(flags, &options.OptsLock)
 	commoncmd.FlagsResourceSelector(cmd, &options.OptsResourceSelector)
+	commoncmd.FlagNodeSelector(flags, &options.NodeSelector)
 	return cmd
 }
 
@@ -2662,6 +2663,12 @@ func newCmdObjectInstanceSyncRestore(kind string) *cobra.Command {
 	commoncmd.FlagsLock(flags, &options.OptsLock)
 	commoncmd.FlagsResourceSelector(cmd, &options.OptsResourceSelector)
 	commoncmd.FlagForce(flags, &options.Force)
+	commoncmd.FlagNodeSelector(flags, &options.NodeSelector)
+	flags.StringVarP(&options.To, "to", "t", "", "restore in the path given")
+	flags.StringVar(&options.Src, "src", "", "the source to restore")
+	if err := cmd.MarkFlagRequired("to"); err != nil {
+		panic(err)
+	}
 	return cmd
 }
 

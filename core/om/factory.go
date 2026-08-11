@@ -2886,6 +2886,9 @@ func newCmdObjectInstanceSyncRestore(kind string) *cobra.Command {
 	commoncmd.FlagForce(flags, &options.Force)
 	flags.StringVarP(&options.To, "to", "t", "", "restore in the path given")
 	flags.StringVar(&options.Src, "src", "", "the source to restore")
+	if err := cmd.MarkFlagRequired("to"); err != nil {
+		panic(err)
+	}
 	hiddenFlagLocal(flags, &options.Local)
 	return cmd
 }
