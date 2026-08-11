@@ -2646,6 +2646,7 @@ func newCmdObjectInstanceSyncFull(kind string) *cobra.Command {
 	commoncmd.FlagsResourceSelector(cmd, &options.OptsResourceSelector)
 	commoncmd.FlagForce(flags, &options.Force)
 	commoncmd.FlagTarget(flags, &options.Target)
+	commoncmd.FlagNodeSelector(flags, &options.NodeSelector)
 	return cmd
 }
 
@@ -2688,6 +2689,7 @@ func newCmdObjectInstanceSyncResync(kind string) *cobra.Command {
 	commoncmd.FlagsLock(flags, &options.OptsLock)
 	commoncmd.FlagsResourceSelector(cmd, &options.OptsResourceSelector)
 	commoncmd.FlagForce(flags, &options.Force)
+	commoncmd.FlagNodeSelector(flags, &options.NodeSelector)
 	return cmd
 }
 
@@ -2707,6 +2709,7 @@ func newCmdObjectInstanceSyncSplit(kind string) *cobra.Command {
 	commoncmd.FlagsLock(flags, &options.OptsLock)
 	commoncmd.FlagsResourceSelector(cmd, &options.OptsResourceSelector)
 	commoncmd.FlagForce(flags, &options.Force)
+	commoncmd.FlagNodeSelector(flags, &options.NodeSelector)
 	return cmd
 }
 
@@ -2727,6 +2730,7 @@ func newCmdObjectInstanceSyncUpdate(kind string) *cobra.Command {
 	commoncmd.FlagsResourceSelector(cmd, &options.OptsResourceSelector)
 	commoncmd.FlagForce(flags, &options.Force)
 	commoncmd.FlagTarget(flags, &options.Target)
+	commoncmd.FlagNodeSelector(flags, &options.NodeSelector)
 	return cmd
 }
 
