@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -36,9 +37,6 @@ type (
 		PolicyName   string
 		Name         string
 		DstConfig    string
-
-		lastBackup      time.Time
-		lastBackupCount int
 	}
 
 	policiesCfg struct {
@@ -84,8 +82,21 @@ func New() resource.Driver {
 	return &T{}
 }
 
-func (t *T) Status(context.Context) status.T {
-	return t.StatusLastSync([]string{hostname.Hostname()})
+func (t *T) Status(ctx context.Context) status.T {
+	v, _ := t.IsInstanceSufficientlyStarted(ctx)
+	if !v {
+		t.StatusLog().Info("instance not sufficiently started")
+		return status.NotApplicable
+	}
+
+	_, err := exec.LookPath(plakar)
+	if err != nil {
+		t.StatusLog().Warn("plakar executable not found: %v", err)
+		return status.Warn
+	}
+
+	nodenames := []string{hostname.Hostname()}
+	return t.StatusLastSync(nodenames)
 }
 
 func (t *T) ScheduleOptions() resource.ScheduleOptions {
@@ -100,10 +111,43 @@ func (t *T) Restore(ctx context.Context, to, src string) error {
 	if to == "" {
 		return nil
 	}
-	var latestBackup backupList
-	err := t.execList(src, func(line string) {
+
+	if src == "*" {
+		backups, err := t.latestBackupsBySource(ctx)
+		if err != nil {
+			return err
+		}
+		if len(backups) == 0 {
+			return fmt.Errorf("no backup found")
+		}
+		for resourceSrc, backup := range backups {
+			if err := ctx.Err(); err != nil {
+				return err
+			}
+			restorePath := filepath.Join(to, resourceSrc)
+			if err := t.execRestore(ctx, restorePath, backup.SnapshotId); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	backup, err := t.latestBackupBySource(ctx, src)
+	if err != nil {
+		return err
+	}
+	if backup == (backupList{}) {
+		return fmt.Errorf("no backup found")
+	}
+	return t.execRestore(ctx, to, backup.SnapshotId)
+}
+
+func (t *T) latestBackupsBySource(ctx context.Context) (map[string]backupList, error) {
+	backups := make(map[string]backupList)
+
+	err := t.execListWithTags(ctx, func(line string) {
 		parts := strings.Fields(line)
-		if len(parts) < 2 {
+		if len(parts) < 7 {
+			t.Log().Warnf("failed to parse line '%s': not enough fields", line)
 			return
 		}
 		timestamp, err := time.Parse(time.RFC3339, parts[0])
@@ -111,30 +155,85 @@ func (t *T) Restore(ctx context.Context, to, src string) error {
 			t.Log().Warnf("failed to parse timestamp from line '%s': %v", line, err)
 			return
 		}
-		if latestBackup == (backupList{}) || timestamp.After(latestBackup.Timestamp) {
-			latestBackup = backupList{
+		tagField := parts[6]
+		const tagsPrefix = "tags="
+		if !strings.HasPrefix(tagField, tagsPrefix) {
+			t.Log().Warnf("failed to parse tags from line '%s': missing 'tags=' prefix", line)
+			return
+		}
+		tags := strings.TrimPrefix(tagField, tagsPrefix)
+		for tag := range strings.SplitSeq(tags, ",") {
+			kv := strings.SplitN(tag, "=", 2)
+			if len(kv) != 2 {
+				continue
+			}
+			if kv[0] == "src" {
+				if b, exists := backups[kv[1]]; !exists || timestamp.After(b.Timestamp) {
+					backups[kv[1]] = backupList{
+						SnapshotId: parts[1],
+						Timestamp:  timestamp,
+					}
+				}
+				break
+			}
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return backups, nil
+}
+
+func (t *T) latestBackupBySource(ctx context.Context, src string) (backupList, error) {
+	var latest backupList
+
+	err := t.execList(ctx, src, func(line string) {
+		parts := strings.Fields(line)
+		if len(parts) < 2 {
+			t.Log().Warnf("failed to parse line '%s': not enough fields", line)
+			return
+		}
+		timestamp, err := time.Parse(time.RFC3339, parts[0])
+		if err != nil {
+			t.Log().Warnf("failed to parse timestamp from line '%s': %v", line, err)
+			return
+		}
+		if latest == (backupList{}) || timestamp.After(latest.Timestamp) {
+			latest = backupList{
 				SnapshotId: parts[1],
 				Timestamp:  timestamp,
 			}
 		}
 	})
 	if err != nil {
-		return err
+		return backupList{}, err
 	}
-	if latestBackup == (backupList{}) {
-		return fmt.Errorf("no backup found")
-	}
-	if err := t.execRestore(to, latestBackup.SnapshotId); err != nil {
-		return err
-	}
-	return nil
+	return latest, nil
 }
 
-func (t *T) Label(context.Context) string {
-	if t.lastBackup.IsZero() {
-		return "never backed up"
+func (t *T) Label(ctx context.Context) string {
+	return t.label(ctx, true)
+}
+
+func (t *T) label(ctx context.Context, retry bool) string {
+	i := 0
+	stderr, err := t.execListWithStderr(ctx, "", func(_ string) {
+		i++
+	})
+
+	if err != nil && stderr != "" && t.isConfigError(stderr) && retry {
+		t.Log().Infof("Import configuration and retry list (attempt 1/2)")
+		if importErr := t.importConfig(ctx); importErr != nil {
+			t.Log().Errorf("failed to import configuration: %v", importErr)
+			return ""
+		}
+		return t.label(ctx, false)
+	} else if err != nil {
+		t.Log().Errorf("failed to list backups: %v", err)
+		return ""
 	}
-	return fmt.Sprintf("last backup: %s (%d dirs)", t.lastBackup.Format(time.RFC822), t.lastBackupCount)
+	return fmt.Sprintf("%d backups", i)
 }
 
 func (t *T) Update(ctx context.Context) error {
@@ -175,31 +274,27 @@ func (t *T) backupWithRetries(ctx context.Context, retries int) error {
 		return err
 	}
 	if !exist {
-		if err = t.importConfig(); err != nil {
+		if err = t.importConfig(ctx); err != nil {
 			return err
 		}
 	}
-	success := 0
 	for _, path := range paths {
-		stderr, err := t.execBackup(path)
+		stderr, err := t.execBackup(ctx, path)
 		if err == nil {
-			if cleanErr := t.clean(t.buildFlags(path.Src)); cleanErr != nil {
+			if cleanErr := t.clean(ctx, t.buildFlags(path.Src)); cleanErr != nil {
 				return cleanErr
 			}
-			success++
 			continue
 		}
 		if stderr != "" && t.isConfigError(stderr) {
 			t.Log().Infof("Import configuration and retry backup (attempt %d/%d)", retries+1, maxRetries)
-			if importErr := t.importConfig(); importErr != nil {
+			if importErr := t.importConfig(ctx); importErr != nil {
 				return importErr
 			}
 			return t.backupWithRetries(ctx, retries+1)
 		}
 		return err
 	}
-	t.lastBackup = time.Now()
-	t.lastBackupCount = success
 	return nil
 }
 
@@ -239,7 +334,7 @@ func (t *T) configDirExists() (bool, error) {
 	return false, err
 }
 
-func (t *T) importConfig() error {
+func (t *T) importConfig(ctx context.Context) error {
 	exists, err := t.configDirExists()
 	if err != nil {
 		return err
@@ -252,7 +347,7 @@ func (t *T) importConfig() error {
 			return err
 		}
 	}
-	if err := t.execCreate(!exists); err != nil {
+	if err := t.execCreate(ctx, !exists); err != nil {
 		return err
 	}
 	return nil
@@ -283,7 +378,7 @@ func (t *T) checkPolicy(path string) (string, error) {
 	return "", fmt.Errorf("multiple policies found in policies.yml, specify one with the policy keyword")
 }
 
-func (t *T) clean(tag string) error {
+func (t *T) clean(ctx context.Context, tag string) error {
 	if t.PolicyConfig == "" {
 		t.Log().Infof("no policy_config configuration, skipping prune")
 		return nil
@@ -299,7 +394,7 @@ func (t *T) clean(tag string) error {
 			return err
 		}
 	}
-	return t.execPrune(policy, tag)
+	return t.execPrune(ctx, policy, tag)
 }
 
 func (t *T) fqdn() string {
@@ -426,13 +521,14 @@ func (t *T) buildFlags(src string) string {
 	return strings.Join(flags, ",")
 }
 
-func (t *T) buildCommandWithPassphrase(args ...string) (*command.T, error) {
+func (t *T) buildCommandWithPassphrase(ctx context.Context, args ...string) (*command.T, error) {
 	passphrase, err := t.getContent(t.Passphrase)
 	if err != nil {
 		return nil, err
 	}
 	return command.New(
 		command.WithName(capabilities.GetPath(plakar)),
+		command.WithContext(ctx),
 		command.WithVarArgs(args...),
 		command.WithCommandLogLevel(zerolog.InfoLevel),
 		command.WithStdoutLogLevel(zerolog.InfoLevel),
@@ -442,63 +538,14 @@ func (t *T) buildCommandWithPassphrase(args ...string) (*command.T, error) {
 	), nil
 }
 
-func (t *T) execBackup(src backupSource) (string, error) {
-	cmd, err := t.buildCommandWithPassphrase(t.getConfigFlag(), t.getConfigDir(), "at", "@"+t.fqdn(), "backup", "-tag", t.buildFlags(src.Src), src.Path)
-	if err != nil {
-		return "", err
-	}
-	err = cmd.Run()
-	return string(cmd.Stderr()), err
-}
-
-func (t *T) execCreate(overwritten bool) error {
-	cmd, err := t.buildCommandWithPassphrase(t.getConfigFlag(), t.getConfigDir(), "at", "@"+t.fqdn(), "create")
-	if err != nil {
-		return err
-	}
-	err = cmd.Run()
-	if err != nil && overwritten {
-		if _, err := t.importKey(t.StoreConfig, storesFile); err != nil {
-			return err
-		}
-		return t.execCreate(false)
-	}
-	return err
-}
-
-func (t *T) execPrune(policy, tag string) error {
-	if len(t.PolicyConfig) <= 0 {
-		t.Log().Infof("no policy_config configuration, skipping prune")
-		return nil
-	}
-	cmd, err := t.buildCommandWithPassphrase(t.getConfigFlag(), t.getConfigDir(), "at", "@"+t.fqdn(), "prune", "-tag", tag, "-policy", policy, "-apply")
-	if err != nil {
-		return err
-	}
-	return cmd.Run()
-}
-
-func (t *T) execRestore(path, snapshotId string) error {
-	args := []string{t.getConfigFlag(), t.getConfigDir(), "at", "@" + t.fqdn(), "restore", "-to", path, snapshotId}
-	cmd, err := t.buildCommandWithPassphrase(args...)
-	if err != nil {
-		return err
-	}
-	return cmd.Run()
-}
-
-func (t *T) execList(src string, onLine func(string)) error {
-	args := []string{t.getConfigFlag(), t.getConfigDir(), "at", "@" + t.fqdn(), "ls"}
-	if src != "" {
-		args = append(args, "-tag", t.buildFlags(src))
-	}
-
+func (t *T) buildCommandWithStdoutCallback(ctx context.Context, onLine func(string), args ...string) (*command.T, error) {
 	passphrase, err := t.getContent(t.Passphrase)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	cmdOpt := []funcopt.O{
 		command.WithName(capabilities.GetPath(plakar)),
+		command.WithContext(ctx),
 		command.WithVarArgs(args...),
 		command.WithCommandLogLevel(zerolog.InfoLevel),
 		command.WithStderrLogLevel(zerolog.ErrorLevel),
@@ -510,7 +557,106 @@ func (t *T) execList(src string, onLine func(string)) error {
 	} else {
 		cmdOpt = append(cmdOpt, command.WithOnStdoutLine(onLine))
 	}
+
+	return command.New(cmdOpt...), nil
+}
+
+func (t *T) execBackup(ctx context.Context, src backupSource) (string, error) {
+	cmd, err := t.buildCommandWithPassphrase(ctx, t.getConfigFlag(), t.getConfigDir(), "at", "@"+t.fqdn(), "backup", "-tag", t.buildFlags(src.Src), src.Path)
+	if err != nil {
+		return "", err
+	}
+	err = cmd.Run()
+	return string(cmd.Stderr()), err
+}
+
+func (t *T) execCreate(ctx context.Context, overwritten bool) error {
+	cmd, err := t.buildCommandWithPassphrase(ctx, t.getConfigFlag(), t.getConfigDir(), "at", "@"+t.fqdn(), "create")
+	if err != nil {
+		return err
+	}
+	err = cmd.Run()
+	if err != nil && overwritten {
+		if _, err := t.importKey(t.StoreConfig, storesFile); err != nil {
+			return err
+		}
+		return t.execCreate(ctx, false)
+	}
+	return err
+}
+
+func (t *T) execPrune(ctx context.Context, policy, tag string) error {
+	if len(t.PolicyConfig) <= 0 {
+		t.Log().Infof("no policy_config configuration, skipping prune")
+		return nil
+	}
+	cmd, err := t.buildCommandWithPassphrase(ctx, t.getConfigFlag(), t.getConfigDir(), "at", "@"+t.fqdn(), "prune", "-tag", tag, "-policy", policy, "-apply")
+	if err != nil {
+		return err
+	}
+	return cmd.Run()
+}
+
+func (t *T) execRestore(ctx context.Context, path, snapshotId string) error {
+	args := []string{t.getConfigFlag(), t.getConfigDir(), "at", "@" + t.fqdn(), "restore", "-to", path, snapshotId}
+	cmd, err := t.buildCommandWithPassphrase(ctx, args...)
+	if err != nil {
+		return err
+	}
+	return cmd.Run()
+}
+
+func (t *T) execListWithStderr(ctx context.Context, src string, onLine func(string)) (string, error) {
+	args := []string{t.getConfigFlag(), t.getConfigDir(), "at", "@" + t.fqdn(), "ls"}
+	if src != "" {
+		args = append(args, "-tag", t.buildFlags(src))
+	}
+
+	passphrase, err := t.getContent(t.Passphrase)
+	if err != nil {
+		return "", err
+	}
+	cmdOpt := []funcopt.O{
+		command.WithName(capabilities.GetPath(plakar)),
+		command.WithContext(ctx),
+		command.WithVarArgs(args...),
+		command.WithCommandLogLevel(zerolog.Disabled),
+		command.WithStderrLogLevel(zerolog.Disabled),
+		command.WithLogger(t.Log()),
+		command.WithVarEnv("PLAKAR_PASSPHRASE=" + string(passphrase)),
+	}
+	if onLine == nil {
+		cmdOpt = append(cmdOpt, command.WithStdoutLogLevel(zerolog.InfoLevel))
+	} else {
+		cmdOpt = append(cmdOpt, command.WithOnStdoutLine(onLine))
+	}
+
 	cmd := command.New(cmdOpt...)
+	err = cmd.Run()
+	return string(cmd.Stderr()), err
+}
+
+func (t *T) execList(ctx context.Context, src string, onLine func(string)) error {
+	args := []string{t.getConfigFlag(), t.getConfigDir(), "at", "@" + t.fqdn(), "ls"}
+	if src != "" {
+		args = append(args, "-tag", t.buildFlags(src))
+	}
+
+	cmd, err := t.buildCommandWithStdoutCallback(ctx, onLine, args...)
+	if err != nil {
+		return err
+	}
+
+	return cmd.Run()
+}
+
+func (t *T) execListWithTags(ctx context.Context, onLine func(string)) error {
+	args := []string{t.getConfigFlag(), t.getConfigDir(), "at", "@" + t.fqdn(), "ls", "-tags"}
+
+	cmd, err := t.buildCommandWithStdoutCallback(ctx, onLine, args...)
+	if err != nil {
+		return err
+	}
 
 	return cmd.Run()
 }
