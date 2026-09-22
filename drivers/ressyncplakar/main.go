@@ -212,34 +212,17 @@ func (t *T) latestBackupBySource(ctx context.Context, src string) (backupList, e
 }
 
 func (t *T) Label(ctx context.Context) string {
-	return t.label(ctx, true)
-}
-
-func (t *T) label(ctx context.Context, retry bool) string {
-
 	v, _ := t.IsInstanceSufficientlyStarted(ctx)
 	_, err := exec.LookPath(plakar)
 	if !v || err != nil {
 		return ""
 	}
-
-	i := 0
-	stderr, err := t.execListWithStderr(ctx, "", func(_ string) {
-		i++
-	})
-
-	if err != nil && stderr != "" && t.isConfigError(stderr) && retry {
-		t.Log().Infof("Import configuration and retry list (attempt 1/2)")
-		if importErr := t.importConfig(ctx); importErr != nil {
-			t.Log().Errorf("failed to import configuration: %v", importErr)
-			return ""
-		}
-		return t.label(ctx, false)
-	} else if err != nil {
-		t.Log().Errorf("failed to list backups: %v", err)
+	sources, err := t.parseSrc(ctx)
+	if err != nil {
 		return ""
 	}
-	return fmt.Sprintf("%d backups", i)
+
+	return fmt.Sprintf("%d sources", len(sources))
 }
 
 func (t *T) Update(ctx context.Context) error {
