@@ -63,8 +63,8 @@ func (t *CmdObjectInstanceSyncRestore) Run(kind string) error {
 				params.Src = &t.Src
 			}
 			{
-				sid := xsession.Sid().UUID()
-				params.SessionId = &sid
+				sid := xsession.SessionID().UUID()
+				params.SessionID = &sid
 			}
 			if t.To == "" {
 				return nil, errors.New("missing --to parameter")

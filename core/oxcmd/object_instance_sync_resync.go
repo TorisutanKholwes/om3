@@ -54,8 +54,8 @@ func (t *CmdObjectInstanceSyncResync) Run(kind string) error {
 				params.Tag = &t.OptsResourceSelector.Tag
 			}
 			{
-				sid := xsession.Sid().UUID()
-				params.SessionId = &sid
+				sid := xsession.SessionID().UUID()
+				params.SessionID = &sid
 			}
 			response, err := c.PostInstanceActionSyncResyncWithResponse(ctx, nodename, p.Namespace, p.Kind, p.Name, &params)
 			if err != nil {
