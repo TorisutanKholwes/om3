@@ -8,6 +8,7 @@ import (
 	"github.com/opensvc/om3/v3/core/manifest"
 	"github.com/opensvc/om3/v3/core/naming"
 	"github.com/opensvc/om3/v3/drivers/ressync"
+	"github.com/opensvc/om3/v3/util/converters"
 )
 
 var (
@@ -33,7 +34,7 @@ var (
 		},
 		{
 			Attr:      "Src",
-			Converter: "list",
+			Converter: converters.List,
 			Example:   "fs#1 volume#0",
 			Option:    "src",
 			Scopable:  true,
