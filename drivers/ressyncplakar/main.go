@@ -95,8 +95,7 @@ func (t *T) Status(ctx context.Context) status.T {
 		return status.Warn
 	}
 
-	nodenames := []string{hostname.Hostname()}
-	return t.StatusLastSync(nodenames)
+	return status.Up
 }
 
 func (t *T) ScheduleOptions() resource.ScheduleOptions {
@@ -217,6 +216,13 @@ func (t *T) Label(ctx context.Context) string {
 }
 
 func (t *T) label(ctx context.Context, retry bool) string {
+
+	v, _ := t.IsInstanceSufficientlyStarted(ctx)
+	_, err := exec.LookPath(plakar)
+	if !v || err != nil {
+		return ""
+	}
+
 	i := 0
 	stderr, err := t.execListWithStderr(ctx, "", func(_ string) {
 		i++
