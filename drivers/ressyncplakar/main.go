@@ -423,7 +423,7 @@ func (t *T) buildSourcesFromDrivers(drivers []resource.Driver) []backupSource {
 	for _, driver := range drivers {
 		if h, ok := driver.(header); ok {
 			sources = append(sources, backupSource{
-				Path: h.Head() + "/",
+				Path: h.Head(),
 				Rid:  driver.RID(),
 				Src:  driver.RID(),
 			})
@@ -503,7 +503,7 @@ func (t *T) getConfigDir() string {
 }
 
 func (t *T) buildFlags(src string) string {
-	flags := []string{"src=" + src, "node=" + hostname.Hostname(), "path=" + t.GetObject().(core).Path().String(), "rid=" + t.RID()}
+	flags := []string{"src=" + src, "node=" + hostname.Hostname(), "path=" + t.GetObject().(core).Path().String(), "sync_rid=" + t.RID()}
 	if t.Name != "" {
 		flags = append(flags, "name="+t.Name)
 	}

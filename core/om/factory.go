@@ -2546,6 +2546,7 @@ func newCmdObjectSync(kind string) *cobra.Command {
 		newCmdObjectGroupList(kind, "sync"),
 		newCmdObjectGroupInfo(kind, "sync"),
 		newCmdObjectGroupResync(kind, "sync"),
+		newCmdObjectGroupRestore(kind, "sync"),
 		newCmdObjectGroupSplit(kind, "sync"),
 		newCmdObjectGroupUpdate(kind, "sync"),
 	)
@@ -2617,6 +2618,33 @@ func newCmdObjectGroupResync(kind, group string) *cobra.Command {
 	return cmd
 }
 
+func newCmdObjectGroupRestore(kind, group string) *cobra.Command {
+	var options commands.CmdObjectInstanceRestore
+	cmd := &cobra.Command{
+		Use:     "restore [PATTERN]...",
+		Short:   "restore a replicated pair to a previous state",
+		Long:    "Restore a replicated pair to a previous state.",
+		GroupID: commoncmd.GroupIDReplication,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			commoncmd.SetRIDFromArgs(&options.RID, args, group, group)
+			return options.Run(kind)
+		},
+	}
+	commoncmd.CmdWithArg(cmd, "PATTERN  A fnmatch resource index filter.")
+	flags := cmd.Flags()
+	addFlagsGlobal(flags, &options.OptsGlobal)
+	commoncmd.FlagsLock(flags, &options.OptsLock)
+	commoncmd.FlagsResourceSelector(cmd, &options.OptsResourceSelector)
+	commoncmd.FlagForce(flags, &options.Force)
+	flags.StringVarP(&options.To, "to", "t", "", "restore in the path given")
+	flags.StringVar(&options.Src, "src", "", "the source to restore")
+	if err := cmd.MarkFlagRequired("to"); err != nil {
+		panic(err)
+	}
+	hiddenFlagLocal(flags, &options.Local)
+	return cmd
+
+}
 func newCmdObjectGroupSplit(kind, group string) *cobra.Command {
 	var options commands.CmdObjectInstanceSplit
 	cmd := &cobra.Command{
@@ -3342,8 +3370,8 @@ func newCmdObjectInstanceFull(kind string) *cobra.Command {
 	return cmd
 }
 
-func newCmdObjectInstanceSyncRestore(kind string) *cobra.Command {
-	var options commands.CmdObjectInstanceSyncRestore
+func newCmdObjectInstanceRestore(kind string) *cobra.Command {
+	var options commands.CmdObjectInstanceRestore
 	cmd := &cobra.Command{
 		Use:   "restore",
 		Short: "restore",
