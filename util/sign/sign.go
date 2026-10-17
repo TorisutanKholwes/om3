@@ -91,7 +91,7 @@ func CreateAndFillDisk(path string) error {
 	u := uuid.New()
 	copy(block[HBUUIDOffset:], u[:])
 
-	checksum := crc32.Checksum(block[HBMagicOffset:HBHeaderSize], CRC32CTable)
+	checksum := crc32.Checksum(block[:HBHeaderSize], CRC32CTable)
 	binary.LittleEndian.PutUint32(block[HBCrcOffset:], checksum)
 
 	if err := writeHeaderBlock(path, block); err != nil {
