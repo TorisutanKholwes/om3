@@ -3325,10 +3325,20 @@ type PostInstanceActionSyncRestoreParams struct {
 	Tag    *InQueryTag    `form:"tag,omitempty" json:"tag,omitempty"`
 
 	// To the destination directory
-	To *string `form:"to,omitempty" json:"to,omitempty"`
+	To    *string       `form:"to,omitempty" json:"to,omitempty"`
+	Force *InQueryForce `form:"force,omitempty" json:"force,omitempty"`
 
-	// Src the source resource expression
+	// Src the resource to restore, used when rid is not set
 	Src *string `form:"src,omitempty" json:"src,omitempty"`
+
+	// Snapshot the identifier of the backup pass to restore, the latest snapshots by default
+	Snapshot *string `form:"snapshot,omitempty" json:"snapshot,omitempty"`
+
+	// Config also restore the object configuration
+	Config *bool `form:"config,omitempty" json:"config,omitempty"`
+
+	// Refs also restore the keys of the referenced sec and cfg objects
+	Refs *bool `form:"refs,omitempty" json:"refs,omitempty"`
 }
 
 // PostInstanceActionSyncResyncParams defines parameters for PostInstanceActionSyncResync.

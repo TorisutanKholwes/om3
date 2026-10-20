@@ -3567,7 +3567,9 @@ func newCmdObjectInstanceSyncRestore(kind string) *cobra.Command {
 	var options commands.CmdObjectInstanceSyncRestore
 	cmd := &cobra.Command{
 		Use:   "restore",
-		Short: "restore",
+		Short: "restore the instance data from its backups to a local archive",
+		Long: "Restore the instance data from the snapshots the sync resources of type backup made, " +
+			"into a temporary directory of the node, and save it as a tar.gz archive in the --to directory.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return options.Run(kind)
 		},
@@ -3577,6 +3579,14 @@ func newCmdObjectInstanceSyncRestore(kind string) *cobra.Command {
 	commoncmd.FlagsLock(flags, &options.OptsLock)
 	commoncmd.FlagsResourceSelector(cmd, &options.OptsResourceSelector)
 	commoncmd.FlagForce(flags, &options.Force)
+	commoncmd.FlagNodeSelector(flags, &options.NodeSelector)
+	flags.StringVar(&options.To, "to", "", "save the archive in this local directory")
+	flags.StringVar(&options.Snapshot, "snapshot", "", "restore the pass with this identifier, instead of the latest snapshots")
+	flags.BoolVar(&options.Config, "config", false, "also restore the object configuration")
+	flags.BoolVar(&options.Refs, "refs", false, "also restore the keys of the referenced sec and cfg objects")
+	if err := cmd.MarkFlagRequired("to"); err != nil {
+		panic(err)
+	}
 	return cmd
 }
 

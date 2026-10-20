@@ -26,7 +26,9 @@ type (
 		NodeSelector string
 		Force        bool
 		To           string
-		Src          string
+		Snapshot     string
+		Config       bool
+		Refs         bool
 	}
 )
 
@@ -59,8 +61,17 @@ func (t *CmdObjectInstanceSyncRestore) Run(kind string) error {
 			if t.OptsResourceSelector.Tag != "" {
 				params.Tag = &t.OptsResourceSelector.Tag
 			}
-			if t.Src != "" {
-				params.Src = &t.Src
+			if t.Snapshot != "" {
+				params.Snapshot = &t.Snapshot
+			}
+			if t.Config {
+				params.Config = &t.Config
+			}
+			if t.Refs {
+				params.Refs = &t.Refs
+			}
+			if t.Force {
+				params.Force = &t.Force
 			}
 			{
 				sid := xsession.SessionID().UUID()

@@ -117,6 +117,7 @@ func init() {
 		newCmdObjectInstanceIngest(kind),
 		newCmdObjectInstanceFull(kind),
 		newCmdObjectInstanceResync(kind),
+		newCmdObjectInstanceSyncRestore(kind),
 		newCmdObjectInstanceSplit(kind),
 		newCmdObjectInstanceUpdate(kind),
 	)

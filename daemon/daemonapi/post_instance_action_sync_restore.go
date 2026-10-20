@@ -59,6 +59,18 @@ func (a *DaemonAPI) postLocalInstanceActionSyncRestore(ctx echo.Context, namespa
 	if params.Tag != nil && *params.Tag != "" {
 		args = append(args, "--tag", *params.Tag)
 	}
+	if params.Snapshot != nil && *params.Snapshot != "" {
+		args = append(args, "--snapshot", *params.Snapshot)
+	}
+	if params.Config != nil && *params.Config {
+		args = append(args, "--config")
+	}
+	if params.Refs != nil && *params.Refs {
+		args = append(args, "--refs")
+	}
+	if params.Force != nil && *params.Force {
+		args = append(args, "--force")
+	}
 	if params.SessionID != nil {
 		requesterSid = *params.SessionID
 	}
