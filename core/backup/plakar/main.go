@@ -72,6 +72,10 @@ type (
 		// unless a test replaces it.
 		installKey func() error
 
+		// keyDecoder, if set, replaces the datastore decoding of the
+		// key references, for tests.
+		keyDecoder func(option, ref string) ([]byte, error)
+
 		// prepared is set once the store configuration is written and
 		// the store is known to exist.
 		prepared   bool
@@ -218,6 +222,13 @@ func (t *T) installKeyFile() error {
 
 // decodeKey returns the content of a key reference of the store section.
 func (t *T) decodeKey(option, ref string) ([]byte, error) {
+	if t.keyDecoder != nil {
+		return t.keyDecoder(option, ref)
+	}
+	return t.rootDecodeKey(option, ref)
+}
+
+func (t *T) rootDecodeKey(option, ref string) ([]byte, error) {
 	km, err := datarecv.ParseKeyMetaRel(ref, naming.NsRoot)
 	if err != nil {
 		return nil, fmt.Errorf("store %s: %s: %w", t.name, option, err)

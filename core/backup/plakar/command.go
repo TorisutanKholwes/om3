@@ -231,12 +231,21 @@ func (t *T) exec(ctx context.Context, c call) error {
 // environment variable is readable in /proc/<pid>/environ and inherited by
 // the subprocesses, so the agent one must not reach plakar. PLAKAR_TAGS is
 // emptied too, as a backup without -tag would use it.
+//
+// With an identity, a SSH agent holding it is started for the command.
 func (t *T) env(ctx context.Context) ([]string, func(), error) {
 	env := []string{
 		"PLAKAR_PASSPHRASE=",
 		"PLAKAR_TAGS=",
 	}
-	return env, func() {}, nil
+	if t.identity == "" {
+		return env, func() {}, nil
+	}
+	sock, stop, err := t.startAgent(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	return append(env, "SSH_AUTH_SOCK="+sock), stop, nil
 }
 
 // prepare makes sure the store exists, creating it if plakar can not open

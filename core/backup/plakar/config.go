@@ -40,10 +40,14 @@ func (t *T) writeConfig() error {
 			return fmt.Errorf("store %s: %w", t.name, err)
 		}
 	}
+	options, err := t.storeOptions()
+	if err != nil {
+		return err
+	}
 	stores := storesConfig{
 		Version: configVersion,
 		Stores: map[string]map[string]string{
-			t.name: t.storeOptions(),
+			t.name: options,
 		},
 	}
 	b, err := yaml.Marshal(stores)
@@ -77,10 +81,22 @@ func (t *T) writeConfig() error {
 }
 
 // storeOptions returns the options of the store in stores.yml.
-func (t *T) storeOptions() map[string]string {
-	return map[string]string{
+//
+// The host key is public, and written there for the sftp package, which
+// passes it to ssh as the only known host. The identity is not: it is
+// loaded in a SSH agent for each command.
+func (t *T) storeOptions() (map[string]string, error) {
+	options := map[string]string{
 		"location": t.location,
 	}
+	if t.hostKey != "" {
+		s, err := t.hostKeyOption()
+		if err != nil {
+			return nil, err
+		}
+		options["host_key"] = s
+	}
+	return options, nil
 }
 
 // writeFile writes a 0600 file, through a temporary file renamed in place
