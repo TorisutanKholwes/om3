@@ -1,0 +1,7 @@
+Also back up the `sec` and `cfg` objects the service configuration
+references, one snapshot per key, each key read as a stream.
+
+The references are the `from <path> key <key>` expressions, and the
+`<name>/<key>` words of the `configs`, `secrets`, `configs_environment` and
+`secrets_environment` keywords. All the keys of a referenced object are
+backed up.

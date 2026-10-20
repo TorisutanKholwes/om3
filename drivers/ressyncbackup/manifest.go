@@ -49,6 +49,13 @@ var (
 			Scopable: true,
 			Text:     keywords.NewText(fs, "text/kw/keep"),
 		},
+		{
+			Attr:      "IncludeRefs",
+			Converter: converters.Bool,
+			Option:    "include_refs",
+			Scopable:  true,
+			Text:      keywords.NewText(fs, "text/kw/include_refs"),
+		},
 	}
 )
 

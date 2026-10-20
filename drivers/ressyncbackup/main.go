@@ -42,6 +42,8 @@ type (
 		Exclude []string `json:"exclude"`
 		Keep    string   `json:"keep"`
 
+		IncludeRefs bool `json:"include_refs"`
+
 		// openStore returns the store driver, newStore unless a test
 		// replaces it.
 		openStore func() (backup.Store, error)
@@ -241,6 +243,14 @@ func (t *T) lockedPass(ctx context.Context) (backup.Store, error) {
 	} else {
 		done++
 		prune = append(prune, t.objectFilter(configRID))
+	}
+	if t.IncludeRefs {
+		filters, err := t.backupRefs(ctx, s, passID)
+		if err != nil {
+			errs = errors.Join(errs, fmt.Errorf("refs: %w", err))
+		}
+		done += len(filters)
+		prune = append(prune, filters...)
 	}
 	if errs != nil {
 		return nil, errs
