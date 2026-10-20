@@ -121,7 +121,7 @@ func newTestStore(t *testing.T, f *fakePlakar) *T {
 	s := &T{
 		name:       "lab",
 		location:   filepath.Join(dir, "kloset"),
-		passphrase: "from backup/sec/lab key passphrase",
+		passphrase: "from store/sec/lab key passphrase",
 		root:       filepath.Join(dir, "var"),
 		runDir:     filepath.Join(dir, "run"),
 		bin:        f.bin(),

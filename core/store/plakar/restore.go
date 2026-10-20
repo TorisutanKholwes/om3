@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/opensvc/om3/v3/core/backup"
+	"github.com/opensvc/om3/v3/core/store"
 )
 
 // Restore restores the snapshot id in the dst directory.
@@ -16,7 +16,7 @@ import (
 // The files land directly under dst, without the root of the snapshot:
 // the snapshot of /srv/app1 restored to /tmp/restore puts /srv/app1/a in
 // /tmp/restore/a.
-func (t *T) Restore(ctx context.Context, id backup.SnapshotID, dst string) error {
+func (t *T) Restore(ctx context.Context, id store.SnapshotID, dst string) error {
 	if err := validateID(id); err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (t *T) Restore(ctx context.Context, id backup.SnapshotID, dst string) error
 // plakar prints the errors of a running command on its standard output,
 // so on error w may have received an error message: a caller writing to a
 // file writes to a temporary one, renamed in place on success only.
-func (t *T) RestoreStream(ctx context.Context, id backup.SnapshotID, name string, w io.Writer) error {
+func (t *T) RestoreStream(ctx context.Context, id store.SnapshotID, name string, w io.Writer) error {
 	if err := validateID(id); err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (t *T) RestoreStream(ctx context.Context, id backup.SnapshotID, name string
 
 // validateID returns an error if id is not a snapshot id plakar accepts as
 // an argument: an hexadecimal id or id prefix.
-func validateID(id backup.SnapshotID) error {
+func validateID(id store.SnapshotID) error {
 	if !isHex(string(id)) {
 		return fmt.Errorf("invalid snapshot id %q", id)
 	}

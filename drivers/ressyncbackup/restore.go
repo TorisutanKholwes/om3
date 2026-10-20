@@ -11,10 +11,10 @@ import (
 	"strings"
 
 	"github.com/opensvc/om3/v3/core/actioncontext"
-	"github.com/opensvc/om3/v3/core/backup"
 	"github.com/opensvc/om3/v3/core/naming"
 	"github.com/opensvc/om3/v3/core/object"
 	"github.com/opensvc/om3/v3/core/resource"
+	"github.com/opensvc/om3/v3/core/store"
 )
 
 // Restore restores the snapshots of the object resources, and with the
@@ -68,28 +68,28 @@ func (t *T) Restore(ctx context.Context, opts resource.RestoreOptions) error {
 
 // restoreFilter returns the tags selecting the snapshots of rid to restore
 // from: all the ones of the object resource, or the one of the pass.
-func (t *T) restoreFilter(rid, passID string) backup.Tags {
+func (t *T) restoreFilter(rid, passID string) store.Tags {
 	filter := t.objectFilter(rid)
 	if passID != "" {
-		filter[backup.TagPass] = passID
+		filter[store.TagPass] = passID
 	}
 	return filter
 }
 
 // latest returns the latest snapshot matching the filter.
-func latest(ctx context.Context, s backup.Store, filter backup.Tags) (backup.Snapshot, error) {
+func latest(ctx context.Context, s store.Store, filter store.Tags) (store.Snapshot, error) {
 	l, err := s.List(ctx, filter)
 	if err != nil {
-		return backup.Snapshot{}, err
+		return store.Snapshot{}, err
 	}
-	snap, ok := backup.Latest(l)
+	snap, ok := store.Latest(l)
 	if !ok {
-		return backup.Snapshot{}, fmt.Errorf("%w matching %s", backup.ErrNoSnapshot, filter)
+		return store.Snapshot{}, fmt.Errorf("%w matching %s", store.ErrNoSnapshot, filter)
 	}
 	return snap, nil
 }
 
-func (t *T) restoreSource(ctx context.Context, s backup.Store, opts resource.RestoreOptions, src source) error {
+func (t *T) restoreSource(ctx context.Context, s store.Store, opts resource.RestoreOptions, src source) error {
 	snap, err := latest(ctx, s, t.restoreFilter(src.rid, opts.Snapshot))
 	if err != nil {
 		return err
@@ -98,7 +98,7 @@ func (t *T) restoreSource(ctx context.Context, s backup.Store, opts resource.Res
 	if opts.Into != "" {
 		dst = filepath.Join(opts.Into, src.rid)
 	}
-	t.Log().Infof("restore %s from snapshot %s of pass %s made on %s to %s", src.rid, snap.ID, snap.Tags[backup.TagPass], snap.Tags[backup.TagNode], dst)
+	t.Log().Infof("restore %s from snapshot %s of pass %s made on %s to %s", src.rid, snap.ID, snap.Tags[store.TagPass], snap.Tags[store.TagNode], dst)
 	return s.Restore(ctx, snap.ID, dst)
 }
 
@@ -161,8 +161,8 @@ func (t *T) restoreSources(ctx context.Context, opts resource.RestoreOptions) ([
 
 // restoreConfig restores the configuration of the object, in place or in
 // the --into directory.
-func (t *T) restoreConfig(ctx context.Context, s backup.Store, opts resource.RestoreOptions) error {
-	ss, ok := s.(backup.StreamStore)
+func (t *T) restoreConfig(ctx context.Context, s store.Store, opts resource.RestoreOptions) error {
+	ss, ok := s.(store.StreamStore)
 	if !ok {
 		return fmt.Errorf("the store %s can not restore a stream", t.Store)
 	}
@@ -188,8 +188,8 @@ func (t *T) restoreConfig(ctx context.Context, s backup.Store, opts resource.Res
 
 // restoreRefs restores the referenced keys, in place in their sec and cfg
 // objects, or as files in the --into directory.
-func (t *T) restoreRefs(ctx context.Context, s backup.Store, opts resource.RestoreOptions) error {
-	ss, ok := s.(backup.StreamStore)
+func (t *T) restoreRefs(ctx context.Context, s store.Store, opts resource.RestoreOptions) error {
+	ss, ok := s.(store.StreamStore)
 	if !ok {
 		return fmt.Errorf("the store %s can not restore a stream", t.Store)
 	}
@@ -198,15 +198,15 @@ func (t *T) restoreRefs(ctx context.Context, s backup.Store, opts resource.Resto
 		return err
 	}
 	// the latest snapshot of each key
-	byRef := make(map[string]backup.Snapshot)
+	byRef := make(map[string]store.Snapshot)
 	for _, snap := range l {
-		k := snap.Tags[backup.TagRef]
+		k := snap.Tags[store.TagRef]
 		if prev, ok := byRef[k]; !ok || snap.Time.After(prev.Time) {
 			byRef[k] = snap
 		}
 	}
 	if len(byRef) == 0 {
-		return fmt.Errorf("%w matching %s", backup.ErrNoSnapshot, t.restoreFilter(refRID, opts.Snapshot))
+		return fmt.Errorf("%w matching %s", store.ErrNoSnapshot, t.restoreFilter(refRID, opts.Snapshot))
 	}
 	var errs error
 	for k, snap := range byRef {

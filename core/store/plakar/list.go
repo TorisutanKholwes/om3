@@ -7,29 +7,29 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opensvc/om3/v3/core/backup"
+	"github.com/opensvc/om3/v3/core/store"
 )
 
 // List returns the snapshots matching all the filter tags, the most recent
 // first, or all the snapshots of the store with an empty filter.
-func (t *T) List(ctx context.Context, filter backup.Tags) ([]backup.Snapshot, error) {
+func (t *T) List(ctx context.Context, filter store.Tags) ([]store.Snapshot, error) {
 	return t.list(ctx, filter, false)
 }
 
 // latest returns the most recent snapshot matching all the filter tags.
-func (t *T) latest(ctx context.Context, filter backup.Tags) (backup.Snapshot, error) {
+func (t *T) latest(ctx context.Context, filter store.Tags) (store.Snapshot, error) {
 	l, err := t.list(ctx, filter, true)
 	if err != nil {
-		return backup.Snapshot{}, err
+		return store.Snapshot{}, err
 	}
-	s, ok := backup.Latest(l)
+	s, ok := store.Latest(l)
 	if !ok {
-		return backup.Snapshot{}, fmt.Errorf("store %s: %w matching %s", t.name, backup.ErrNoSnapshot, filter)
+		return store.Snapshot{}, fmt.Errorf("store %s: %w matching %s", t.name, store.ErrNoSnapshot, filter)
 	}
 	return s, nil
 }
 
-func (t *T) list(ctx context.Context, filter backup.Tags, latest bool) ([]backup.Snapshot, error) {
+func (t *T) list(ctx context.Context, filter store.Tags, latest bool) ([]store.Snapshot, error) {
 	if err := filter.Validate(); err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (t *T) list(ctx context.Context, filter backup.Tags, latest bool) ([]backup
 		args = append(args, "-latest")
 	}
 	args = append(args, tagArgs(filter)...)
-	l := make([]backup.Snapshot, 0)
+	l := make([]store.Snapshot, 0)
 	onLine := func(line string) {
 		s, err := parseListLine(line)
 		if err != nil {
@@ -50,7 +50,7 @@ func (t *T) list(ctx context.Context, filter backup.Tags, latest bool) ([]backup
 	if err := t.run(ctx, call{args: args, onLine: onLine}); err != nil {
 		return nil, fmt.Errorf("store %s: list: %w", t.name, err)
 	}
-	slices.SortStableFunc(l, func(a, b backup.Snapshot) int {
+	slices.SortStableFunc(l, func(a, b store.Snapshot) int {
 		return b.Time.Compare(a.Time)
 	})
 	return l, nil
@@ -58,7 +58,7 @@ func (t *T) list(ctx context.Context, filter backup.Tags, latest bool) ([]backup
 
 // tagArgs returns the -tag filter of a ls, check or prune command, with
 // which plakar keeps the snapshots having all the tags.
-func tagArgs(filter backup.Tags) []string {
+func tagArgs(filter store.Tags) []string {
 	if len(filter) == 0 {
 		return nil
 	}
@@ -71,8 +71,8 @@ func tagArgs(filter backup.Tags) []string {
 //
 // the size being humanized, as in "1.2 MiB", and the tags absent from the
 // snapshots having none.
-func parseListLine(line string) (backup.Snapshot, error) {
-	var s backup.Snapshot
+func parseListLine(line string) (store.Snapshot, error) {
+	var s store.Snapshot
 	fields := strings.Fields(line)
 	if len(fields) < 6 {
 		return s, fmt.Errorf("not enough fields")
@@ -85,9 +85,9 @@ func parseListLine(line string) (backup.Snapshot, error) {
 		return s, fmt.Errorf("invalid snapshot id %q", fields[1])
 	}
 	s.Time = tm
-	s.ID = backup.SnapshotID(fields[1])
+	s.ID = store.SnapshotID(fields[1])
 	rest := fields[5:]
-	s.Tags = make(backup.Tags)
+	s.Tags = make(store.Tags)
 	if last := rest[len(rest)-1]; strings.HasPrefix(last, "tags=") {
 		rest = rest[:len(rest)-1]
 		for _, tag := range strings.Split(strings.TrimPrefix(last, "tags="), ",") {

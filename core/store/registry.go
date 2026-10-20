@@ -1,4 +1,4 @@
-package backup
+package store
 
 import (
 	"fmt"
@@ -22,13 +22,13 @@ const (
 // Register registers the allocator of the store driver serving the type
 // name, as in "type = plakar".
 func Register(name string, allocator func() Store) {
-	driver.Register(driver.NewID(driver.GroupBackup, name), allocator)
+	driver.Register(driver.NewID(driver.GroupStore, name), allocator)
 }
 
 // GetDriver returns a new store driver for the type name, or nil when no
 // driver serves this type.
 func GetDriver(name string) Store {
-	i, ok := driver.GetStrict(driver.NewID(driver.GroupBackup, name))
+	i, ok := driver.GetStrict(driver.NewID(driver.GroupStore, name))
 	if !ok {
 		return nil
 	}

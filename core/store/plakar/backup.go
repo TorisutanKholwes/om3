@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/opensvc/om3/v3/core/backup"
+	"github.com/opensvc/om3/v3/core/store"
 )
 
 // Backup makes a snapshot of the src directory, with the tags, and returns
@@ -17,7 +17,7 @@ import (
 // plakar prints only a short id when a backup completes, so the full id is
 // the one of the latest snapshot having the tags, which include the
 // identifier of the pass.
-func (t *T) Backup(ctx context.Context, src string, tags backup.Tags) (backup.SnapshotID, error) {
+func (t *T) Backup(ctx context.Context, src string, tags store.Tags) (store.SnapshotID, error) {
 	if err := tags.Validate(); err != nil {
 		return "", err
 	}
@@ -40,7 +40,7 @@ func (t *T) Backup(ctx context.Context, src string, tags backup.Tags) (backup.Sn
 //
 // The stream is passed to the plakar stdin importer, so its bytes do not
 // touch the disk of the node.
-func (t *T) BackupStream(ctx context.Context, r io.Reader, name string, tags backup.Tags) (backup.SnapshotID, error) {
+func (t *T) BackupStream(ctx context.Context, r io.Reader, name string, tags store.Tags) (store.SnapshotID, error) {
 	if err := tags.Validate(); err != nil {
 		return "", err
 	}
@@ -60,18 +60,18 @@ func (t *T) BackupStream(ctx context.Context, r io.Reader, name string, tags bac
 //
 // The -name is the path of the object, which makes the snapshots readable
 // in the plakar interface without knowing the tags.
-func (t *T) backupArgs(tags backup.Tags) []string {
+func (t *T) backupArgs(tags store.Tags) []string {
 	args := []string{"backup", "-no-progress"}
 	if len(tags) > 0 {
 		args = append(args, "-tag", tags.String())
 	}
-	if name := tags[backup.TagPath]; name != "" {
+	if name := tags[store.TagPath]; name != "" {
 		args = append(args, "-name", name)
 	}
 	return args
 }
 
-func (t *T) backedUpID(ctx context.Context, tags backup.Tags) (backup.SnapshotID, error) {
+func (t *T) backedUpID(ctx context.Context, tags store.Tags) (store.SnapshotID, error) {
 	s, err := t.latest(ctx, tags)
 	if err != nil {
 		return "", fmt.Errorf("store %s: backup done, but its snapshot is not found: %w", t.name, err)

@@ -15,7 +15,7 @@ func TestCapabilitiesScanner(t *testing.T) {
 		t.Setenv("PATH", f.dir)
 		l, err := capabilitiesScanner(context.Background())
 		require.NoError(t, err)
-		require.Equal(t, []string{"drivers.backup.plakar", capabilities.MakePath("plakar", f.bin())}, l)
+		require.Equal(t, []string{"drivers.store.plakar", capabilities.MakePath("plakar", f.bin())}, l)
 	})
 	t.Run("without the binary", func(t *testing.T) {
 		t.Setenv("PATH", t.TempDir())

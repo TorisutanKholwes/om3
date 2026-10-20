@@ -13,7 +13,7 @@ import (
 func TestHostKeyInStoresConfig(t *testing.T) {
 	f := newFakePlakar(t)
 	s := newTestStore(t, f)
-	s.hostKey = "from backup/sec/lab key host_key"
+	s.hostKey = "from store/sec/lab key host_key"
 	s.keyDecoder = func(option, ref string) ([]byte, error) {
 		require.Equal(t, "host_key", option)
 		return []byte("store.lab ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl\n"), nil
@@ -45,7 +45,7 @@ func TestIdentityAgent(t *testing.T) {
 	// the fake plakar lists the agent keys in place of an ls
 	f.write("ls.capture", "")
 	s := newTestStore(t, f)
-	s.identity = "from backup/sec/lab key identity"
+	s.identity = "from store/sec/lab key identity"
 	s.keyDecoder = func(option, ref string) ([]byte, error) {
 		require.Equal(t, "identity", option)
 		return key, nil

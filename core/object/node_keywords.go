@@ -200,7 +200,7 @@ var (
 		Types:    []string{"plakar"},
 	}
 	kwNodeStorePlakarPassphrase = keywords.Keyword{
-		Example:  "from backup/sec/lab key passphrase",
+		Example:  "from store/sec/lab key passphrase",
 		Option:   "passphrase",
 		Required: true,
 		Section:  "store",
@@ -208,14 +208,14 @@ var (
 		Types:    []string{"plakar"},
 	}
 	kwNodeStorePlakarIdentity = keywords.Keyword{
-		Example: "from backup/sec/lab key identity",
+		Example: "from store/sec/lab key identity",
 		Option:  "identity",
 		Section: "store",
 		Text:    keywords.NewText(fs, "text/kw/node/store.plakar.identity"),
 		Types:   []string{"plakar"},
 	}
 	kwNodeStorePlakarHostKey = keywords.Keyword{
-		Example: "from backup/sec/lab key host_key",
+		Example: "from store/sec/lab key host_key",
 		Option:  "host_key",
 		Section: "store",
 		Text:    keywords.NewText(fs, "text/kw/node/store.plakar.host_key"),

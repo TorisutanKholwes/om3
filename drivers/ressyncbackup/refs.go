@@ -8,10 +8,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/opensvc/om3/v3/core/backup"
 	"github.com/opensvc/om3/v3/core/datarecv"
 	"github.com/opensvc/om3/v3/core/naming"
 	"github.com/opensvc/om3/v3/core/object"
+	"github.com/opensvc/om3/v3/core/store"
 	"github.com/opensvc/om3/v3/core/xconfig"
 	"github.com/opensvc/om3/v3/util/key"
 )
@@ -104,8 +104,8 @@ func referencedPaths(cfg *xconfig.T, namespace string) []naming.Path {
 // backupRefs makes a snapshot of each key of the referenced sec and cfg
 // objects, read as a stream, and returns the filters selecting them for the
 // prune.
-func (t *T) backupRefs(ctx context.Context, s backup.Store, passID string) ([]backup.Tags, error) {
-	ss, ok := s.(backup.StreamStore)
+func (t *T) backupRefs(ctx context.Context, s store.Store, passID string) ([]store.Tags, error) {
+	ss, ok := s.(store.StreamStore)
 	if !ok {
 		return nil, fmt.Errorf("the store %s can not back up a stream", t.Store)
 	}
@@ -115,7 +115,7 @@ func (t *T) backupRefs(ctx context.Context, s backup.Store, passID string) ([]ba
 	}
 	var (
 		errs    error
-		filters []backup.Tags
+		filters []store.Tags
 	)
 	for _, p := range referencedPaths(o.Config(), t.Path.Namespace) {
 		refs, err := t.refKeys(p)
@@ -158,14 +158,14 @@ func (t *T) refKeys(p naming.Path) ([]ref, error) {
 	return l, nil
 }
 
-func (t *T) backupRef(ctx context.Context, ss backup.StreamStore, passID string, r ref) error {
+func (t *T) backupRef(ctx context.Context, ss store.StreamStore, passID string, r ref) error {
 	km := datarecv.KeyMeta{Path: r.path, Key: r.key, From: t.Path.Namespace}
 	b, err := km.Decode()
 	if err != nil {
 		return err
 	}
 	tags := t.tags(passID, refRID)
-	tags[backup.TagRef] = r.String()
+	tags[store.TagRef] = r.String()
 	if err := tags.Validate(); err != nil {
 		return err
 	}
@@ -174,9 +174,9 @@ func (t *T) backupRef(ctx context.Context, ss backup.StreamStore, passID string,
 }
 
 // refFilter returns the tags selecting the snapshots of a referenced key.
-func (t *T) refFilter(r ref) backup.Tags {
+func (t *T) refFilter(r ref) store.Tags {
 	filter := t.objectFilter(refRID)
-	filter[backup.TagRef] = r.String()
+	filter[store.TagRef] = r.String()
 	return filter
 }
 

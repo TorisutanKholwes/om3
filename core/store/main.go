@@ -1,12 +1,11 @@
-// Package backup is the store side of the om3 backup framework: the Store
-// interface a store driver implements, and the types the framework and the
-// drivers exchange.
+// Package store is the om3 store framework: the Store interface a store
+// driver implements, and the types the framework and the drivers exchange.
 //
 // The interface is the one of the OpenSVC design "om3 svc backup and
 // restore". Until the framework is published, this package is a provisional
 // copy of it, to be aligned on the published one. The points still to be
 // confirmed with OpenSVC are marked "to confirm with OpenSVC".
-package backup
+package store
 
 import (
 	"context"

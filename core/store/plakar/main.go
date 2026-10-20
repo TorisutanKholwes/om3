@@ -1,4 +1,4 @@
-// Package plakar is the plakar store driver of the om3 backup framework.
+// Package plakar is the plakar store driver of the om3 store framework.
 //
 // It embeds no plakar library: it runs the plakar binary installed on the
 // node, which keeps om3 independent of the plakar versions. The bytes of the
@@ -21,11 +21,11 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/opensvc/om3/v3/core/backup"
 	"github.com/opensvc/om3/v3/core/datarecv"
 	"github.com/opensvc/om3/v3/core/driver"
 	"github.com/opensvc/om3/v3/core/naming"
 	"github.com/opensvc/om3/v3/core/rawconfig"
+	"github.com/opensvc/om3/v3/core/store"
 	"github.com/opensvc/om3/v3/core/xconfig"
 	"github.com/opensvc/om3/v3/util/capabilities"
 	"github.com/opensvc/om3/v3/util/key"
@@ -43,14 +43,14 @@ type (
 		location string
 
 		// passphrase, identity and hostKey are key references, as in
-		// "from backup/sec/lab key passphrase".
+		// "from store/sec/lab key passphrase".
 		passphrase string
 		identity   string
 		hostKey    string
 
 		// keep is the default retention of the resources using this
 		// store.
-		keep backup.Retention
+		keep store.Retention
 
 		// configErr is the error SetConfig met, returned by every
 		// operation: a store with an invalid configuration, or on a
@@ -88,7 +88,7 @@ const (
 )
 
 var (
-	drvID = driver.NewID(driver.GroupBackup, "plakar")
+	drvID = driver.NewID(driver.GroupStore, "plakar")
 
 	// ErrNoBinary is returned when the plakar binary is not found on the
 	// node.
@@ -113,7 +113,7 @@ func (t *T) SetLogger(l *plog.Logger) {
 
 // Keep returns the retention the store declares, the default of the
 // resources using it.
-func (t *T) Keep() backup.Retention {
+func (t *T) Keep() store.Retention {
 	return t.keep
 }
 
@@ -134,7 +134,7 @@ func (t *T) setConfig(config *xconfig.T) error {
 	if t.name == "" {
 		return fmt.Errorf("plakar store: no name")
 	}
-	section := backup.SectionName(t.name)
+	section := store.SectionName(t.name)
 	get := func(option string) string {
 		return config.GetString(key.New(section, option))
 	}
@@ -148,7 +148,7 @@ func (t *T) setConfig(config *xconfig.T) error {
 	if t.passphrase == "" {
 		return fmt.Errorf("store %s: the passphrase keyword is not set", t.name)
 	}
-	keep, err := backup.ParseRetention(get("keep"))
+	keep, err := store.ParseRetention(get("keep"))
 	if err != nil {
 		return fmt.Errorf("store %s: keep: %w", t.name, err)
 	}

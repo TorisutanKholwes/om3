@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/opensvc/om3/v3/core/backup"
+	"github.com/opensvc/om3/v3/core/store"
 )
 
 // Check verifies the integrity of all the snapshots of the store.
@@ -20,7 +20,7 @@ func (t *T) Check(ctx context.Context) error {
 //
 // plakar checks nothing and succeeds when no snapshot matches, so the
 // snapshot is looked up first.
-func (t *T) CheckFiltered(ctx context.Context, filter backup.Tags) error {
+func (t *T) CheckFiltered(ctx context.Context, filter store.Tags) error {
 	if _, err := t.latest(ctx, filter); err != nil {
 		return err
 	}

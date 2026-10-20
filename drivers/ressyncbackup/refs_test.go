@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/opensvc/om3/v3/core/backup"
 	"github.com/opensvc/om3/v3/core/naming"
 	"github.com/opensvc/om3/v3/core/object"
+	"github.com/opensvc/om3/v3/core/store"
 	"github.com/opensvc/om3/v3/core/xconfig"
 )
 
@@ -41,17 +41,17 @@ passphrase = from ./sec/lab key passphrase
 }
 
 func TestUpdateIncludeRefs(t *testing.T) {
-	r, store, ctx, _ := setup(t, "include_refs = true\nkeep = 1d\n\n[app#1]\nconfigs_environment = A=s1/a\n")
+	r, st, ctx, _ := setup(t, "include_refs = true\nkeep = 1d\n\n[app#1]\nconfigs_environment = A=s1/a\n")
 	sec, err := object.NewCfg(naming.Path{Namespace: "test", Kind: naming.KindCfg, Name: "s1"})
 	require.NoError(t, err)
 	require.NoError(t, sec.AddKey("a", []byte("va")))
 	require.NoError(t, sec.AddKey("b/c", []byte("vbc")))
 
 	require.NoError(t, r.Update(ctx))
-	require.Equal(t, "va", store.streams["refs/test/cfg/s1/a"])
-	require.Equal(t, "vbc", store.streams["refs/test/cfg/s1/b/c"])
-	require.Contains(t, store.prunes, backup.Tags{"path": "test/svc/app1", "rid": "ref", "ref": "test/cfg/s1:a"})
-	require.Contains(t, store.prunes, backup.Tags{"path": "test/svc/app1", "rid": "ref", "ref": "test/cfg/s1:b/c"})
+	require.Equal(t, "va", st.streams["refs/test/cfg/s1/a"])
+	require.Equal(t, "vbc", st.streams["refs/test/cfg/s1/b/c"])
+	require.Contains(t, st.prunes, store.Tags{"path": "test/svc/app1", "rid": "ref", "ref": "test/cfg/s1:a"})
+	require.Contains(t, st.prunes, store.Tags{"path": "test/svc/app1", "rid": "ref", "ref": "test/cfg/s1:b/c"})
 }
 
 func TestUpdateIncludeRefsMissingObject(t *testing.T) {

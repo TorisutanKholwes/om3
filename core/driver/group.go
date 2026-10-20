@@ -26,6 +26,7 @@ const (
 	GroupSwitch
 	GroupStonith
 	GroupBackup
+	GroupStore
 )
 
 var (
@@ -48,6 +49,7 @@ var (
 		"switch":    GroupSwitch,
 		"stonith":   GroupStonith,
 		"backup":    GroupBackup,
+		"store":     GroupStore,
 	}
 	toGroupString = map[Group]string{
 		GroupIP:        "ip",
@@ -66,6 +68,7 @@ var (
 		GroupSwitch:    "switch",
 		GroupStonith:   "stonith",
 		GroupBackup:    "backup",
+		GroupStore:     "store",
 	}
 )
 

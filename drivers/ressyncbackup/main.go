@@ -21,14 +21,14 @@ import (
 	"time"
 
 	"github.com/opensvc/om3/v3/core/actioncontext"
-	"github.com/opensvc/om3/v3/core/backup"
-	_ "github.com/opensvc/om3/v3/core/backup/plakar"
 	"github.com/opensvc/om3/v3/core/driver"
 	"github.com/opensvc/om3/v3/core/object"
 	"github.com/opensvc/om3/v3/core/provisioned"
 	"github.com/opensvc/om3/v3/core/resource"
 	"github.com/opensvc/om3/v3/core/status"
 	"github.com/opensvc/om3/v3/core/statusbus"
+	"github.com/opensvc/om3/v3/core/store"
+	_ "github.com/opensvc/om3/v3/core/store/plakar"
 	"github.com/opensvc/om3/v3/drivers/ressync"
 	"github.com/opensvc/om3/v3/util/hostname"
 	"github.com/opensvc/om3/v3/util/plog"
@@ -46,7 +46,7 @@ type (
 
 		// openStore returns the store driver, newStore unless a test
 		// replaces it.
-		openStore func() (backup.Store, error)
+		openStore func() (store.Store, error)
 	}
 
 	// source is a resource to back up.
@@ -68,7 +68,7 @@ type (
 	}
 
 	keeper interface {
-		Keep() backup.Retention
+		Keep() store.Retention
 	}
 )
 
@@ -92,7 +92,7 @@ func New() resource.Driver {
 	return &T{}
 }
 
-func (t *T) store() (backup.Store, error) {
+func (t *T) store() (store.Store, error) {
 	if t.openStore != nil {
 		return t.openStore()
 	}
@@ -101,12 +101,12 @@ func (t *T) store() (backup.Store, error) {
 
 // newStore returns the driver of the store the resource uses, configured
 // from its [store#<name>] section of the cluster configuration.
-func (t *T) newStore() (backup.Store, error) {
+func (t *T) newStore() (store.Store, error) {
 	node, err := object.NewNode(object.WithVolatile(true))
 	if err != nil {
 		return nil, err
 	}
-	s, err := backup.New(node.MergedConfig(), t.Store)
+	s, err := store.New(node.MergedConfig(), t.Store)
 	if err != nil {
 		return nil, err
 	}
@@ -117,14 +117,14 @@ func (t *T) newStore() (backup.Store, error) {
 }
 
 // retention returns the keep of the resource, or else the one of the store.
-func (t *T) retention(s backup.Store) (backup.Retention, error) {
+func (t *T) retention(s store.Store) (store.Retention, error) {
 	if t.Keep != "" {
-		return backup.ParseRetention(t.Keep)
+		return store.ParseRetention(t.Keep)
 	}
 	if i, ok := s.(keeper); ok {
 		return i.Keep(), nil
 	}
-	return backup.Retention{}, nil
+	return store.Retention{}, nil
 }
 
 func (t *T) ScheduleOptions() resource.ScheduleOptions {
@@ -205,7 +205,7 @@ func (t *T) Full(ctx context.Context) error {
 // node never overwrites the snapshots of the active one with its own empty
 // or stale data. The last sync time is written only after a pass with at
 // least one snapshot and no error.
-func (t *T) lockedPass(ctx context.Context) (backup.Store, error) {
+func (t *T) lockedPass(ctx context.Context) (store.Store, error) {
 	if v, rids := t.IsInstanceSufficientlyStarted(ctx); !v {
 		return nil, fmt.Errorf("the instance is not sufficiently started (%s): refuse to back up", strings.Join(rids, ","))
 	}
@@ -227,7 +227,7 @@ func (t *T) lockedPass(ctx context.Context) (backup.Store, error) {
 	var (
 		errs  error
 		done  int
-		prune []backup.Tags
+		prune []store.Tags
 	)
 	for _, src := range sources {
 		tags := t.tags(passID, src.rid)
@@ -276,29 +276,29 @@ func (t *T) lockedPass(ctx context.Context) (backup.Store, error) {
 }
 
 // tags returns the tags of the snapshot of rid made by the pass.
-func (t *T) tags(passID, rid string) backup.Tags {
-	return backup.Tags{
-		backup.TagPath:    t.Path.String(),
-		backup.TagRID:     rid,
-		backup.TagNode:    hostname.Hostname(),
-		backup.TagPass:    passID,
-		backup.TagSyncRID: t.RID(),
+func (t *T) tags(passID, rid string) store.Tags {
+	return store.Tags{
+		store.TagPath:    t.Path.String(),
+		store.TagRID:     rid,
+		store.TagNode:    hostname.Hostname(),
+		store.TagPass:    passID,
+		store.TagSyncRID: t.RID(),
 	}
 }
 
 // objectFilter returns the tags selecting the snapshots of rid, made by any
 // node and any pass.
-func (t *T) objectFilter(rid string) backup.Tags {
-	return backup.Tags{
-		backup.TagPath: t.Path.String(),
-		backup.TagRID:  rid,
+func (t *T) objectFilter(rid string) store.Tags {
+	return store.Tags{
+		store.TagPath: t.Path.String(),
+		store.TagRID:  rid,
 	}
 }
 
 // backupConfig makes the snapshot of the service configuration, read as a
 // stream.
-func (t *T) backupConfig(ctx context.Context, s backup.Store, passID string) error {
-	ss, ok := s.(backup.StreamStore)
+func (t *T) backupConfig(ctx context.Context, s store.Store, passID string) error {
+	ss, ok := s.(store.StreamStore)
 	if !ok {
 		return fmt.Errorf("the store %s can not back up a stream", t.Store)
 	}

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/opensvc/om3/v3/core/backup"
+	"github.com/opensvc/om3/v3/core/store"
 )
 
 // Prune removes the snapshots matching the filter that the keep retention
@@ -16,7 +16,7 @@ import (
 // most recent snapshot of each period, and removes the others. Only the
 // snapshots matching the filter are evaluated. The space is reclaimed by
 // "plakar maintenance", after its grace delay.
-func (t *T) Prune(ctx context.Context, filter backup.Tags, keep backup.Retention) error {
+func (t *T) Prune(ctx context.Context, filter store.Tags, keep store.Retention) error {
 	if keep.IsZero() {
 		return nil
 	}
@@ -36,7 +36,7 @@ func (t *T) Prune(ctx context.Context, filter backup.Tags, keep backup.Retention
 	return nil
 }
 
-func retentionArgs(keep backup.Retention) []string {
+func retentionArgs(keep store.Retention) []string {
 	l := make([]string, 0, 8)
 	for _, e := range []struct {
 		n      int

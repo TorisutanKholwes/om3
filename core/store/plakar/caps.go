@@ -11,7 +11,7 @@ func init() {
 	capabilities.Register(capabilitiesScanner)
 }
 
-// capabilitiesScanner publishes the drivers.backup.plakar capability and
+// capabilitiesScanner publishes the drivers.store.plakar capability and
 // the path of the plakar binary, when the binary is in the PATH: without
 // it, a plakar store is not usable on the node.
 func capabilitiesScanner(ctx context.Context) ([]string, error) {

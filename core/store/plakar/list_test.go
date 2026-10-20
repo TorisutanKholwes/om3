@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/opensvc/om3/v3/core/backup"
+	"github.com/opensvc/om3/v3/core/store"
 )
 
 const (
@@ -19,10 +19,10 @@ func TestParseListLine(t *testing.T) {
 	t.Run("with tags", func(t *testing.T) {
 		s, err := parseListLine("2026-10-14T08:00:00Z " + id1 + "   1.2 MiB        3s /srv/app1 tags=node=n1,path=test/svc/app1,rid=fs#1")
 		require.NoError(t, err)
-		require.Equal(t, backup.SnapshotID(id1), s.ID)
+		require.Equal(t, store.SnapshotID(id1), s.ID)
 		require.Equal(t, time.Date(2026, 10, 14, 8, 0, 0, 0, time.UTC), s.Time)
 		require.Equal(t, "/srv/app1", s.Root)
-		require.Equal(t, backup.Tags{"node": "n1", "path": "test/svc/app1", "rid": "fs#1"}, s.Tags)
+		require.Equal(t, store.Tags{"node": "n1", "path": "test/svc/app1", "rid": "fs#1"}, s.Tags)
 	})
 	t.Run("without tags", func(t *testing.T) {
 		s, err := parseListLine("2026-10-14T08:00:00Z " + id1 + "       0 B        0s /")
@@ -56,15 +56,15 @@ func TestList(t *testing.T) {
 		"a warning plakar printed\n"+
 		"2026-10-14T08:00:00Z "+id1+"   1.1 MiB        3s /srv/app1 tags=path=test/svc/app1,rid=fs#1\n", 0)
 
-	l, err := s.List(context.Background(), backup.Tags{"path": "test/svc/app1", "rid": "fs#1"})
+	l, err := s.List(context.Background(), store.Tags{"path": "test/svc/app1", "rid": "fs#1"})
 	require.NoError(t, err)
 	require.Len(t, l, 2)
-	require.Equal(t, backup.SnapshotID(id2), l[0].ID)
+	require.Equal(t, store.SnapshotID(id2), l[0].ID)
 	require.Equal(t, []string{"ls -uuid -tags -tag path=test/svc/app1,rid=fs#1"}, f.calls())
 
-	latest, err := s.latest(context.Background(), backup.Tags{"path": "test/svc/app1"})
+	latest, err := s.latest(context.Background(), store.Tags{"path": "test/svc/app1"})
 	require.NoError(t, err)
-	require.Equal(t, backup.SnapshotID(id2), latest.ID)
+	require.Equal(t, store.SnapshotID(id2), latest.ID)
 	require.Equal(t, "ls -uuid -tags -latest -tag path=test/svc/app1", f.calls()[1])
 }
 
@@ -76,14 +76,14 @@ func TestListEmpty(t *testing.T) {
 	require.Empty(t, l)
 	require.Equal(t, []string{"ls -uuid -tags"}, f.calls())
 
-	_, err = s.latest(context.Background(), backup.Tags{"path": "x"})
-	require.ErrorIs(t, err, backup.ErrNoSnapshot)
+	_, err = s.latest(context.Background(), store.Tags{"path": "x"})
+	require.ErrorIs(t, err, store.ErrNoSnapshot)
 }
 
 func TestListRejectsInvalidTags(t *testing.T) {
 	f := newFakePlakar(t)
 	s := newTestStore(t, f)
-	_, err := s.List(context.Background(), backup.Tags{"path": "a,b"})
+	_, err := s.List(context.Background(), store.Tags{"path": "a,b"})
 	require.Error(t, err)
 	require.Empty(t, f.calls())
 }
