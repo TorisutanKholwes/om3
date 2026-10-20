@@ -2622,8 +2622,8 @@ func newCmdObjectGroupRestore(kind, group string) *cobra.Command {
 	var options commands.CmdObjectInstanceRestore
 	cmd := &cobra.Command{
 		Use:   "restore [PATTERN]...",
-		Short: "restore the data of the object from its backups",
-		Long: "Restore the data of the object from the snapshots the sync resources of type backup made.\n\n" +
+		Short: "restore the data of the object from its store snapshots",
+		Long: "Restore the data of the object from the snapshots the sync resources of type store made.\n\n" +
 			"By default, the latest snapshot of each fs and volume resource is restored in place, which is refused " +
 			"while an app, container or share resource is up, unless --stop or --force. The --rid selection " +
 			"selects the data resources to restore, as in --rid fs#1.",
@@ -3373,7 +3373,7 @@ func newCmdObjectInstanceRestore(kind string) *cobra.Command {
 	var options commands.CmdObjectInstanceRestore
 	cmd := &cobra.Command{
 		Use:   "restore",
-		Short: "restore the instance data from its backups",
+		Short: "restore the instance data from its store snapshots",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return options.Run(kind)
 		},

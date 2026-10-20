@@ -1,4 +1,4 @@
-package ressyncbackup
+package ressyncstore
 
 import (
 	"bytes"

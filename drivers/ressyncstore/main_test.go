@@ -1,4 +1,4 @@
-package ressyncbackup
+package ressyncstore
 
 import (
 	"context"
@@ -112,7 +112,7 @@ func setup(t *testing.T, extra string) (*T, *fakeStore, context.Context, naming.
 	testhelper.Setup(t)
 	p := naming.Path{Namespace: "test", Kind: naming.KindSvc, Name: "app1"}
 	dir := t.TempDir()
-	conf := "[fs#1]\ntype = directory\npath = " + dir + "\n\n[sync#1]\ntype = backup\nstore = lab\n" + extra
+	conf := "[fs#1]\ntype = directory\npath = " + dir + "\n\n[sync#1]\ntype = store\nstore = lab\n" + extra
 	require.NoError(t, os.MkdirAll(filepath.Dir(p.ConfigFile()), 0700))
 	require.NoError(t, os.WriteFile(p.ConfigFile(), []byte(conf), 0600))
 	o, err := object.NewSvc(p)

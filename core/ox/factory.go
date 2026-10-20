@@ -3567,8 +3567,8 @@ func newCmdObjectInstanceSyncRestore(kind string) *cobra.Command {
 	var options commands.CmdObjectInstanceSyncRestore
 	cmd := &cobra.Command{
 		Use:   "restore",
-		Short: "restore the instance data from its backups to a local archive",
-		Long: "Restore the instance data from the snapshots the sync resources of type backup made, " +
+		Short: "restore the instance data from its store snapshots to a local archive",
+		Long: "Restore the instance data from the snapshots the sync resources of type store made, " +
 			"into a temporary directory of the node, and save it as a tar.gz archive in the --to directory.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return options.Run(kind)

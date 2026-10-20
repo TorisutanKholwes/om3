@@ -1,6 +1,6 @@
-// Package ressyncbackup is the provisional sync resource of type backup.
+// Package ressyncstore is the provisional sync resource of type store.
 //
-// It stands for the OpenSVC backup framework until the framework is
+// It stands for the OpenSVC store framework until the framework is
 // published, limited to calling the store driver: each "sync update" is a
 // pass making one complete snapshot per selected fs or volume resource, plus
 // one of the service configuration, all tagged with the identifier of the
@@ -8,7 +8,7 @@
 //
 // The driver decides when and what is backed up. The store driver only
 // receives a path or a stream, and the tags to set.
-package ressyncbackup
+package ressyncstore
 
 import (
 	"bytes"

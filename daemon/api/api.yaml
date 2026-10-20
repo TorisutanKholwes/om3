@@ -3192,7 +3192,7 @@ paths:
 
   /api/node/name/{nodename}/instance/path/{namespace}/{kind}/{name}/action/sync/restore:
     post:
-      description: Restore the instance data from its backups into a temporary directory, returned as a tar.gz archive
+      description: Restore the instance data from its store snapshots into a temporary directory, returned as a tar.gz archive
       operationId: PostInstanceActionSyncRestore
       parameters:
         - $ref: '#/components/parameters/inPathNodeName'
@@ -3217,7 +3217,7 @@ paths:
             example: "fs#0"
         - in: query
           name: snapshot
-          description: the identifier of the backup pass to restore, the latest snapshots by default
+          description: the identifier of the store pass to restore, the latest snapshots by default
           schema:
             type: string
             example: "20261014T080000Z"

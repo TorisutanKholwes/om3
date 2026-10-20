@@ -3331,7 +3331,7 @@ type PostInstanceActionSyncRestoreParams struct {
 	// Src the resource to restore, used when rid is not set
 	Src *string `form:"src,omitempty" json:"src,omitempty"`
 
-	// Snapshot the identifier of the backup pass to restore, the latest snapshots by default
+	// Snapshot the identifier of the store pass to restore, the latest snapshots by default
 	Snapshot *string `form:"snapshot,omitempty" json:"snapshot,omitempty"`
 
 	// Config also restore the object configuration

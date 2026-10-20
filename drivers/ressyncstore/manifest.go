@@ -1,4 +1,4 @@
-package ressyncbackup
+package ressyncstore
 
 import (
 	"embed"
@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	drvID = driver.NewID(driver.GroupSync, "backup")
+	drvID = driver.NewID(driver.GroupSync, "store")
 
 	//go:embed text
 	fs embed.FS
