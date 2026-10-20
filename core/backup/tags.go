@@ -13,7 +13,8 @@ type (
 	//
 	// To confirm with OpenSVC: the syntax is "key=value", and a value
 	// contains no comma, as the tags are passed to plakar as a single
-	// comma separated list.
+	// comma separated list, and no space, as plakar lists them in a space
+	// separated table.
 	Tags map[string]string
 )
 
@@ -66,8 +67,8 @@ func (t Tags) Validate() error {
 			return fmt.Errorf("invalid tag: empty key")
 		case strings.ContainsAny(k, ",= \t\n"):
 			return fmt.Errorf("invalid tag key %q: must not contain a comma, an equal sign or a space", k)
-		case strings.ContainsAny(v, ",\n"):
-			return fmt.Errorf("invalid tag %s value %q: must not contain a comma", k, v)
+		case strings.ContainsAny(v, ", \t\n"):
+			return fmt.Errorf("invalid tag %s value %q: must not contain a comma or a space", k, v)
 		}
 	}
 	return nil

@@ -49,6 +49,7 @@ func TestTags(t *testing.T) {
 	t.Run("validate rejects a comma in a value", func(t *testing.T) {
 		require.Error(t, Tags{"a": "b,c"}.Validate())
 		require.Error(t, Tags{"a,b": "c"}.Validate())
+		require.Error(t, Tags{"a": "b c"}.Validate())
 		require.Error(t, Tags{"": "c"}.Validate())
 		require.NoError(t, Tags{"a": "b=c"}.Validate())
 	})
