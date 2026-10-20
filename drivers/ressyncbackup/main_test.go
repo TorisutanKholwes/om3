@@ -199,6 +199,15 @@ func TestUpdateUnknownRID(t *testing.T) {
 	require.ErrorContains(t, r.Update(ctx), "fs#9")
 }
 
+func TestIsAvailable(t *testing.T) {
+	require.True(t, isAvailable(status.Up))
+	require.True(t, isAvailable(status.StandbyUp))
+	require.True(t, isAvailable(status.NotApplicable))
+	require.False(t, isAvailable(status.Down))
+	require.False(t, isAvailable(status.Warn))
+	require.False(t, isAvailable(status.Undef))
+}
+
 func TestFull(t *testing.T) {
 	r, store, ctx, _ := setup(t, "")
 	require.NoError(t, r.Full(ctx))

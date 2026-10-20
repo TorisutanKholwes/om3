@@ -319,11 +319,23 @@ func (t *T) configName() string {
 	return t.Path.String() + ".conf"
 }
 
+// isAvailable returns true if a resource status says its mount point holds
+// its data: up, standby up, or n/a for a resource having nothing to mount,
+// like a fs of type directory whose directory exists.
+func isAvailable(st status.T) bool {
+	switch st {
+	case status.Up, status.StandbyUp, status.NotApplicable:
+		return true
+	default:
+		return false
+	}
+}
+
 // sources returns the resources to back up: the rids selection, or else the
 // fs and volume resources exposing a mount point, less the excluded ones.
 //
-// A resource whose status is not up is skipped, its mount point being
-// possibly empty, but a resource the rids keyword names is an error.
+// A resource whose status is not available is skipped, its mount point
+// being possibly empty, but a resource the rids keyword names is an error.
 func (t *T) sources(ctx context.Context) ([]source, error) {
 	sb := statusbus.FromContext(ctx)
 	l := make([]source, 0)
@@ -354,7 +366,7 @@ func (t *T) sources(ctx context.Context) ([]source, error) {
 			}
 			continue
 		}
-		if st := sb.Get(rid); st != status.Up {
+		if st := sb.Get(rid); !isAvailable(st) {
 			if explicit {
 				return nil, fmt.Errorf("rids: %s status is %s", rid, st)
 			}
