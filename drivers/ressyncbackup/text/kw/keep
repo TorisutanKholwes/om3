@@ -1,0 +1,10 @@
+The retention of the snapshots of this resource, overriding the `keep` of
+the store.
+
+A space separated list of `<n><unit>` words, the unit being `d` (day), `w`
+(week), `m` (month) or `y` (year). For example `7d 4w 6m` keeps the most
+recent snapshot of each day of the last seven days, of each week of the
+last four weeks and of each month of the last six months. The others are
+removed after each successful pass.
+
+Without `keep` here or on the store, the snapshots are never pruned.

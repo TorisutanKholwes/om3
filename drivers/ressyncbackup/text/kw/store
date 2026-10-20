@@ -1,0 +1,5 @@
+The name of the store the snapshots are written to, declared by a
+`[store#<name>]` section of the cluster configuration.
+
+A service uses a single store: after a failover, the node now active backs
+up to the same store, and finds the snapshots made by the other node.

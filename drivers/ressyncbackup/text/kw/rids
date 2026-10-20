@@ -1,0 +1,7 @@
+The resources to back up, a space separated list of `fs` and `volume`
+resource ids.
+
+By default, all the `fs` and `volume` resources of the service exposing a
+mount point and whose status is `up`.
+
+Each resource is a complete and independent snapshot.

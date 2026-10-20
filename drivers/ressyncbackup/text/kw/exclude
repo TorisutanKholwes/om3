@@ -1,0 +1,2 @@
+The resources not to back up, a space separated list of resource ids,
+removed from the `rids` selection.
