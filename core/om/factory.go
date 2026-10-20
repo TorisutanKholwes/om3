@@ -2621,9 +2621,12 @@ func newCmdObjectGroupResync(kind, group string) *cobra.Command {
 func newCmdObjectGroupRestore(kind, group string) *cobra.Command {
 	var options commands.CmdObjectInstanceRestore
 	cmd := &cobra.Command{
-		Use:     "restore [PATTERN]...",
-		Short:   "restore a replicated pair to a previous state",
-		Long:    "Restore a replicated pair to a previous state.",
+		Use:   "restore [PATTERN]...",
+		Short: "restore the data of the object from its backups",
+		Long: "Restore the data of the object from the snapshots the sync resources of type backup made.\n\n" +
+			"By default, the latest snapshot of each fs and volume resource is restored in place, which is refused " +
+			"while an app, container or share resource is up, unless --stop or --force. The --rid selection " +
+			"selects the data resources to restore, as in --rid fs#1.",
 		GroupID: commoncmd.GroupIDReplication,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			commoncmd.SetRIDFromArgs(&options.RID, args, group, group)
@@ -2636,15 +2639,11 @@ func newCmdObjectGroupRestore(kind, group string) *cobra.Command {
 	commoncmd.FlagsLock(flags, &options.OptsLock)
 	commoncmd.FlagsResourceSelector(cmd, &options.OptsResourceSelector)
 	commoncmd.FlagForce(flags, &options.Force)
-	flags.StringVarP(&options.To, "to", "t", "", "restore in the path given")
-	flags.StringVar(&options.Src, "src", "", "the source to restore")
-	if err := cmd.MarkFlagRequired("to"); err != nil {
-		panic(err)
-	}
+	addFlagsSyncRestore(flags, &options)
 	hiddenFlagLocal(flags, &options.Local)
 	return cmd
-
 }
+
 func newCmdObjectGroupSplit(kind, group string) *cobra.Command {
 	var options commands.CmdObjectInstanceSplit
 	cmd := &cobra.Command{
@@ -3384,11 +3383,7 @@ func newCmdObjectInstanceRestore(kind string) *cobra.Command {
 	commoncmd.FlagsLock(flags, &options.OptsLock)
 	commoncmd.FlagsResourceSelector(cmd, &options.OptsResourceSelector)
 	commoncmd.FlagForce(flags, &options.Force)
-	flags.StringVarP(&options.To, "to", "t", "", "restore in the path given")
-	flags.StringVar(&options.Src, "src", "", "the source to restore")
-	if err := cmd.MarkFlagRequired("to"); err != nil {
-		panic(err)
-	}
+	addFlagsSyncRestore(flags, &options)
 	hiddenFlagLocal(flags, &options.Local)
 	return cmd
 }

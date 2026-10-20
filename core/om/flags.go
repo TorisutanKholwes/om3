@@ -36,3 +36,11 @@ func hiddenFlagLocal(flags *pflag.FlagSet, p *bool) {
 	flagLocal(flags, p)
 	flags.Lookup("local").Hidden = true
 }
+
+func addFlagsSyncRestore(flags *pflag.FlagSet, options *commands.CmdObjectInstanceRestore) {
+	flags.StringVar(&options.Into, "into", "", "restore into this directory, one sub-directory per resource, instead of in place")
+	flags.StringVar(&options.Snapshot, "snapshot", "", "restore the pass with this identifier, instead of the latest snapshots")
+	flags.BoolVar(&options.Config, "config", false, "also restore the object configuration")
+	flags.BoolVar(&options.Refs, "refs", false, "also restore the keys of the referenced sec and cfg objects")
+	flags.BoolVar(&options.Stop, "stop", false, "stop the instance before an in place restore")
+}

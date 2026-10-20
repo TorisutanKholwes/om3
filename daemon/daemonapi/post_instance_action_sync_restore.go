@@ -46,17 +46,18 @@ func (a *DaemonAPI) postLocalInstanceActionSyncRestore(ctx echo.Context, namespa
 	}
 	log = naming.LogWithPath(log, p)
 	args := []string{p.String(), "instance", "sync", "restore"}
+	// src is the resource to restore, the --rid of the command, and the
+	// rid parameter selects resources too.
 	if params.Rid != nil && *params.Rid != "" {
 		args = append(args, "--rid", *params.Rid)
+	} else if params.Src != nil && *params.Src != "" {
+		args = append(args, "--rid", *params.Src)
 	}
 	if params.Subset != nil && *params.Subset != "" {
 		args = append(args, "--subset", *params.Subset)
 	}
 	if params.Tag != nil && *params.Tag != "" {
 		args = append(args, "--tag", *params.Tag)
-	}
-	if params.Src != nil && *params.Src != "" {
-		args = append(args, "--src", *params.Src)
 	}
 	if params.SessionID != nil {
 		requesterSid = *params.SessionID
@@ -77,7 +78,7 @@ func (a *DaemonAPI) postLocalInstanceActionSyncRestore(ctx echo.Context, namespa
 		}
 	}()
 
-	args = append(args, "--to", tmpDir)
+	args = append(args, "--into", tmpDir)
 	_, execID, err := a.apiExec(ctx, p, requesterSid, args, log)
 	if err != nil {
 		return JSONProblemf(ctx, http.StatusInternalServerError, "", "%s", err)

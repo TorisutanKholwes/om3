@@ -8,6 +8,7 @@ import (
 	"github.com/opensvc/om3/v3/core/naming"
 	"github.com/opensvc/om3/v3/core/object"
 	"github.com/opensvc/om3/v3/core/objectaction"
+	"github.com/opensvc/om3/v3/core/resource"
 )
 
 type (
@@ -15,10 +16,13 @@ type (
 		OptsGlobal
 		commoncmd.OptsLock
 		commoncmd.OptsResourceSelector
-		Local bool
-		Force bool
-		To    string
-		Src   string
+		Local    bool
+		Force    bool
+		Stop     bool
+		Into     string
+		Snapshot string
+		Config   bool
+		Refs     bool
 	}
 )
 
@@ -41,7 +45,15 @@ func (t *CmdObjectInstanceRestore) Run(kind string) error {
 			ctx = actioncontext.WithLockDisabled(ctx, t.Disable)
 			ctx = actioncontext.WithLockTimeout(ctx, t.Timeout)
 			ctx = actioncontext.WithForce(ctx, t.Force)
-			return nil, o.SyncRestore(ctx, t.To, t.Src)
+			return nil, o.SyncRestore(ctx, object.SyncRestoreOptions{
+				RestoreOptions: resource.RestoreOptions{
+					Into:     t.Into,
+					Snapshot: t.Snapshot,
+					Config:   t.Config,
+					Refs:     t.Refs,
+				},
+				Stop: t.Stop,
+			})
 		}),
 	).Do()
 }

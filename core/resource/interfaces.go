@@ -141,7 +141,7 @@ type (
 		Boot(ctx context.Context) error
 	}
 	restorer interface {
-		Restore(context.Context, string, string) error
+		Restore(context.Context, RestoreOptions) error
 	}
 	resyncer interface {
 		Resync(context.Context) error

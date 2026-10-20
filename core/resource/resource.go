@@ -997,7 +997,9 @@ func Resync(ctx context.Context, r Driver) error {
 	return nil
 }
 
-func Restore(ctx context.Context, r Driver, to, src string) error {
+// Restore execute the resource Restore function, if implemented by the
+// driver.
+func Restore(ctx context.Context, r Driver, opts RestoreOptions) error {
 	var i any = r
 	s, ok := i.(restorer)
 	if !ok {
@@ -1008,7 +1010,7 @@ func Restore(ctx context.Context, r Driver, to, src string) error {
 		return ErrDisabled
 	}
 	Setenv(r)
-	if err := s.Restore(ctx, to, src); err != nil {
+	if err := s.Restore(ctx, opts); err != nil {
 		return err
 	}
 	return nil
