@@ -125,9 +125,26 @@ func (t *KeyMeta) CacheFile() (string, error) {
 	return filename, nil
 }
 
+// CacheFileAt installs the key in a 0600 file at path, in a 0700 directory,
+// if the namespace of the reader is allowed to access the datastore keys.
+// The file is reinstalled when the datastore changed.
 func (t *KeyMeta) CacheFileAt(path string) error {
+	return t.cacheFileAt(path, true)
+}
+
+// RootCacheFileAt is CacheFileAt for a reference declared in the node or
+// cluster configuration, where only root can write, so no namespace access
+// control applies.
+func (t *KeyMeta) RootCacheFileAt(path string) error {
+	return t.cacheFileAt(path, false)
+}
+
+func (t *KeyMeta) cacheFileAt(path string, checkAllow bool) error {
 	ds, err := object.NewDataStore(t.Path, object.WithVolatile(true))
-	if !ds.Allow(t.From) {
+	if err != nil {
+		return err
+	}
+	if checkAllow && !ds.Allow(t.From) {
 		return fmt.Errorf("the %s namespace is not allowed to access %s keys", t.From, t.Path)
 	}
 	dsModTime, err := t.Path.ModTime()
