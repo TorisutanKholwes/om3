@@ -1,0 +1,9 @@
+The location of the Kloset store the `plakar` binary of the node writes the
+snapshots to.
+
+A local path uses the `fs` storage built in the `plakar` binary. A
+`sftp://` or `s3://` location requires the `sftp` or `s3` plakar package to
+be installed on every node, with `plakar pkg add`, in the package directory
+the driver passes with `-datadir`.
+
+A store must never be included in a backed up resource.

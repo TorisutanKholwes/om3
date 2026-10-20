@@ -1,0 +1,10 @@
+The default retention of the snapshots of the resources using this store.
+The `keep` keyword of a resource overrides it.
+
+A space separated list of `<n><unit>` words, the unit being `d` (day), `w`
+(week), `m` (month) or `y` (year). For example `7d 4w 6m` keeps the most
+recent snapshot of each day of the last seven days, of each week of the
+last four weeks and of each month of the last six months. A snapshot kept
+by one rule is kept, the others are removed after each successful pass.
+
+Without `keep`, the snapshots are never pruned.

@@ -1,0 +1,5 @@
+The reference to the key holding the SSH private key used to connect a
+`sftp://` store, as in `from backup/sec/lab key identity`.
+
+The key is loaded in a SSH agent started for the duration of each `plakar`
+command, and is never written to disk.

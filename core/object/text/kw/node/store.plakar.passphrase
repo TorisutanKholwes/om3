@@ -1,0 +1,10 @@
+The reference to the key holding the store passphrase, as in
+`from backup/sec/lab key passphrase`.
+
+The key is decoded by the agent and installed in a 0600 file of a private
+0700 directory under the agent run directory. The driver passes the file
+path to `plakar` with `-keyfile`: the passphrase is never on a command line,
+in an environment variable or in a log.
+
+The snapshots are encrypted on the node, index included. Losing the
+passphrase makes them unrecoverable.

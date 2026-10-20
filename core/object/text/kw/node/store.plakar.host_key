@@ -1,0 +1,3 @@
+The reference to the key holding the expected SSH host key of a `sftp://`
+store, as in `from backup/sec/lab key host_key`, in the `known_hosts` line
+format.

@@ -61,3 +61,17 @@ func TestNodeAndClusterKeywordLookup(t *testing.T) {
 		})
 	}
 }
+
+// A store is declared in a [store#<name>] section of cluster.conf, and its
+// driver keywords are only known for the type the section declares.
+func TestStoreKeywordLookup(t *testing.T) {
+	for _, option := range []string{"type", "store", "passphrase", "identity", "host_key", "keep"} {
+		t.Run(option, func(t *testing.T) {
+			k := key.New("store#lab", option)
+			require.NotNil(t, keywordLookup(ccfgKeywordStore, k, naming.KindCcfg, "plakar"))
+		})
+	}
+	t.Run("plakar keywords need the plakar type", func(t *testing.T) {
+		require.Nil(t, keywordLookup(ccfgKeywordStore, key.New("store#lab", "passphrase"), naming.KindCcfg, "other"))
+	})
+}

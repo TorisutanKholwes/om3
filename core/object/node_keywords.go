@@ -184,6 +184,49 @@ var (
 		Section: "backup",
 		Text:    keywords.NewText(fs, "text/kw/node/backup.schedule"),
 	}
+	kwNodeStoreType = keywords.Keyword{
+		Candidates: []string{"plakar"},
+		Option:     "type",
+		Required:   true,
+		Section:    "store",
+		Text:       keywords.NewText(fs, "text/kw/node/store.type"),
+	}
+	kwNodeStorePlakarStore = keywords.Keyword{
+		Example:  "sftp://backup@store.lab/plakar/om3",
+		Option:   "store",
+		Required: true,
+		Section:  "store",
+		Text:     keywords.NewText(fs, "text/kw/node/store.plakar.store"),
+		Types:    []string{"plakar"},
+	}
+	kwNodeStorePlakarPassphrase = keywords.Keyword{
+		Example:  "from backup/sec/lab key passphrase",
+		Option:   "passphrase",
+		Required: true,
+		Section:  "store",
+		Text:     keywords.NewText(fs, "text/kw/node/store.plakar.passphrase"),
+		Types:    []string{"plakar"},
+	}
+	kwNodeStorePlakarIdentity = keywords.Keyword{
+		Example: "from backup/sec/lab key identity",
+		Option:  "identity",
+		Section: "store",
+		Text:    keywords.NewText(fs, "text/kw/node/store.plakar.identity"),
+		Types:   []string{"plakar"},
+	}
+	kwNodeStorePlakarHostKey = keywords.Keyword{
+		Example: "from backup/sec/lab key host_key",
+		Option:  "host_key",
+		Section: "store",
+		Text:    keywords.NewText(fs, "text/kw/node/store.plakar.host_key"),
+		Types:   []string{"plakar"},
+	}
+	kwNodeStoreKeep = keywords.Keyword{
+		Example: "7d 4w 6m",
+		Option:  "keep",
+		Section: "store",
+		Text:    keywords.NewText(fs, "text/kw/node/store.keep"),
+	}
 	kwNodeSwitchSchedule = keywords.Keyword{
 		Option:  "schedule",
 		Section: "switch",
@@ -1945,6 +1988,12 @@ var (
 		&kwNodeArrayIBMDSHMC2,
 		&kwNodeArrayKeyRequired,
 		&kwNodeArrayNexentaPort,
+		&kwNodeStoreType,
+		&kwNodeStorePlakarStore,
+		&kwNodeStorePlakarPassphrase,
+		&kwNodeStorePlakarIdentity,
+		&kwNodeStorePlakarHostKey,
+		&kwNodeStoreKeep,
 	}
 )
 

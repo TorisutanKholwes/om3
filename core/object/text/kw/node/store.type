@@ -1,0 +1,4 @@
+The store driver name.
+
+A store is declared once in the cluster configuration and referenced by
+the `store` keyword of the `sync` resources of type `backup` using it.
