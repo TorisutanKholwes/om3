@@ -3373,7 +3373,7 @@ func newCmdObjectInstanceRestore(kind string) *cobra.Command {
 	var options commands.CmdObjectInstanceRestore
 	cmd := &cobra.Command{
 		Use:   "restore",
-		Short: "restore",
+		Short: "restore the instance data from its backups",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return options.Run(kind)
 		},

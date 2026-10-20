@@ -45,7 +45,7 @@ func (a *DaemonAPI) postLocalInstanceActionSyncRestore(ctx echo.Context, namespa
 		return JSONProblemf(ctx, http.StatusBadRequest, "Invalid parameters", "%s", err)
 	}
 	log = naming.LogWithPath(log, p)
-	args := []string{p.String(), "instance", "sync", "restore"}
+	args := []string{p.String(), "instance", "restore"}
 	// src is the resource to restore, the --rid of the command, and the
 	// rid parameter selects resources too.
 	if params.Rid != nil && *params.Rid != "" {
